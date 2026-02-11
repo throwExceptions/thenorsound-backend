@@ -6,7 +6,8 @@
       "Bash(dotnet build:*)",
       "Bash(winget install:*)",
       "Bash(export PATH=\"$PATH:/c/Program Files/GitHub CLI\")",
-      "Bash(gh:*)"
+      "Bash(gh:*)",
+      "Bash(dotnet test:*)"
     ]
   }
 }

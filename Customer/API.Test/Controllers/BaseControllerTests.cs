@@ -25,9 +25,9 @@ public class BaseControllerTests
         _controller = new BaseController<BaseControllerTests>();
         _alwaysPassValidator = new AlwaysPassValidator();
     }
-
+    
     [Fact]
-    public async Task TryExecuteAsync_Should_ReturnOkResult_WhenNoExceptionsAreThrown()
+    public async Task TryExecuteAsync_Should_ReturnOkResult_When_NoExceptionsAreThrown()
     {
         // Arrange
         var request = new TestRequestDto();
@@ -152,7 +152,7 @@ public class BaseControllerTests
     }
 
     [Fact]
-    public async Task TryExecuteAsync_Should_Return_ErrorResponse_When_ValidationExceptionIsThrown()
+    public async Task TryExecuteAsync_Should_ReturnErrorResponse_When_ValidationExceptionIsThrown()
     {
         // Arrange
         var request = new TestRequestDto();
