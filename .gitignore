@@ -1,0 +1,26 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Visual Studio
+.vs/
+*.rsuser
+[Dd]ebug/
+[Rr]elease/
+
+## Logs
+Logs/
+
+## Rider
+.idea/
+
+## OS
+Thumbs.db
+.DS_Store
+
+## Environment
+appsettings.Development.json
