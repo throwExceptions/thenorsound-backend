@@ -5,6 +5,8 @@ using Application.Commands;
 using Domain.MappingConfiguration;
 using FluentValidation;
 using Infra;
+using Infra.HealthChecks;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +21,18 @@ builder.Host.UseSerilog();
 
 // Add services to the container
 builder.Services.AddControllers();
+
+// Configure CORS
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
 // Configure Mapster mappings
 CustomerEntityMapping.Configure();
@@ -37,6 +51,10 @@ builder.Services.AddMediatR(cfg =>
 // Register Infrastructure services (MongoDB, Repositories)
 builder.Services.AddInfrastructure(builder.Configuration);
 
+// Health checks
+builder.Services.AddHealthChecks()
+    .AddCheck<MongoDbHealthCheck>("mongodb");
+
 // Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -52,6 +70,8 @@ builder.Services.AddSwaggerGen(c =>
 var app = builder.Build();
 
 // Configure HTTP request pipeline
+app.UseCors("AllowFrontend");
+
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
@@ -59,8 +79,22 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = string.Empty; // Swagger UI at root
 });
 
-app.UseHttpsRedirection();
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseAuthorization();
 app.MapControllers();
+
+app.MapHealthChecks("/healthz/live", new HealthCheckOptions
+{
+    Predicate = _ => false // Liveness: always OK if process is running
+});
+
+app.MapHealthChecks("/healthz/ready", new HealthCheckOptions
+{
+    Predicate = _ => true // Readiness: checks all registered health checks
+});
 
 app.Run();

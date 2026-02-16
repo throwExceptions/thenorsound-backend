@@ -1,0 +1,36 @@
+services:
+  customer-service:
+    build:
+      context: ./Customer
+      dockerfile: Dockerfile
+    ports:
+      - "5063:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - MongoDbSettings__ConnectionString=mongodb://mongodb:27017
+      - MongoDbSettings__DatabaseName=thenorsound
+      - MongoDbSettings__CustomerCollectionName=customers
+    depends_on:
+      mongodb:
+        condition: service_started
+
+  mongodb:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  # Future services:
+  # booking-service:
+  #   build:
+  #     context: ./Booking
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "5064:8080"
+  #   depends_on:
+  #     mongodb:
+  #       condition: service_started
+
+volumes:
+  mongodb_data:

@@ -1,0 +1,11 @@
+.vs/
+**/bin/
+**/obj/
+Logs/
+API.Test/
+Infra.Test/
+.claude/
+*.md
+*.slnx
+.editorconfig
+.gitignore
