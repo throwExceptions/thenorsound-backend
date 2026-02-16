@@ -13,7 +13,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/customer-service
 
 permissions:
   contents: read
@@ -47,8 +46,13 @@ jobs:
     needs: test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: ghcr.io/${{ github.repository }}/customer-service
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set lowercase image name
+        run: echo "IMAGE_NAME_LC=${IMAGE_NAME,,}" >> $GITHUB_ENV
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -63,8 +67,8 @@ jobs:
           context: ./Customer
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME_LC }}:${{ github.sha }}
+            ${{ env.IMAGE_NAME_LC }}:latest
 
       - name: Azure Login (OIDC)
         uses: azure/login@v2
@@ -77,8 +81,8 @@ jobs:
         uses: azure/container-apps-deploy-action@v2
         with:
           containerAppName: thenorsound-customer-api
-          resourceGroup: thenorsound-rg
-          imageToDeploy: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          resourceGroup: rg-mongodb
+          imageToDeploy: ${{ env.IMAGE_NAME_LC }}:${{ github.sha }}
           registryUrl: ${{ env.REGISTRY }}
           registryUsername: ${{ github.actor }}
           registryPassword: ${{ secrets.GITHUB_TOKEN }}
