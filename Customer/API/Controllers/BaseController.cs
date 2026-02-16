@@ -66,7 +66,8 @@ namespace API.Controllers
             }
             catch (FormValidationException ex4)
             {
-                logger.LogInformation("Bad request exception in {name}. {ex}", typeof(T).Name, ex4.ToString());
+                var validationErrors = string.Join(", ", ex4.FormValidationError.Select(e => $"{e.Key}: {e.Value}"));
+                logger.LogInformation("Validation exception in {name}. Errors: {errors}", typeof(T).Name, validationErrors);
                 return ErrorResponse(ex4, ErrorType.ValidationError, HttpStatusCode.BadRequest, ex4.FormValidationError);
             }
             catch (AuthenticationException ex6)
