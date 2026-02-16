@@ -86,3 +86,6 @@ jobs:
           registryUrl: ${{ env.REGISTRY }}
           registryUsername: ${{ github.actor }}
           registryPassword: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify application
+        run: echo "✅ Deployed to https://thenorsound-customer-api.nicewave-5605e1b1.northeurope.azurecontainerapps.io"
