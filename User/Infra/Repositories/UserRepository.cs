@@ -25,36 +25,19 @@ public class UserRepository(IMongoCollection<UserEntity> users) : IUserRepositor
         return entity?.Adapt<User>();
     }
 
-    public async Task<IEnumerable<User>> GetAllAsync(int? userType = null)
+    public async Task<IEnumerable<User>> GetAllAsync()
     {
-        var filterBuilder = Builders<UserEntity>.Filter;
-        var filter = filterBuilder.Eq(u => u.IsActive, true);
-
-        if (userType.HasValue)
-        {
-            filter &= filterBuilder.Eq(u => u.UserType, userType.Value);
-        }
-
         var entities = await users
-            .Find(filter)
+            .Find(u => u.IsActive)
             .ToListAsync();
 
         return entities.Adapt<List<User>>();
     }
 
-    public async Task<IEnumerable<User>> GetByCustomerIdAsync(string customerId, int? userType = null)
+    public async Task<IEnumerable<User>> GetByCustomerIdAsync(string customerId)
     {
-        var filterBuilder = Builders<UserEntity>.Filter;
-        var filter = filterBuilder.Eq(u => u.IsActive, true)
-                   & filterBuilder.Eq(u => u.CustomerId, customerId);
-
-        if (userType.HasValue)
-        {
-            filter &= filterBuilder.Eq(u => u.UserType, userType.Value);
-        }
-
         var entities = await users
-            .Find(filter)
+            .Find(u => u.IsActive && u.CustomerId == customerId)
             .ToListAsync();
 
         return entities.Adapt<List<User>>();
@@ -84,7 +67,6 @@ public class UserRepository(IMongoCollection<UserEntity> users) : IUserRepositor
         existingEntity.LastName = user.LastName;
         existingEntity.Role = (int)user.Role;
         existingEntity.Occupation = user.Occupation;
-        existingEntity.CostPerHour = user.CostPerHour;
         existingEntity.About = user.About;
         existingEntity.PreviousJobs = user.PreviousJobs;
         existingEntity.Skills = user.Skills?.Adapt<List<SkillEntity>>();

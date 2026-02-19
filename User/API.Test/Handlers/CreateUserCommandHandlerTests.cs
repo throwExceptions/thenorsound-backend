@@ -1,4 +1,6 @@
 using API.Test.Helpers;
+using Application.Clients;
+using Application.Clients.DTOs.Response;
 using Application.Commands;
 using Application.Exceptions;
 using Domain.Enums;
@@ -12,41 +14,43 @@ namespace API.Test.Handlers;
 public class CreateUserCommandHandlerTests
 {
     private readonly Mock<IUserRepository> _repoMock;
+    private readonly Mock<ICustomerClient> _customerClientMock;
     private readonly CreateUserCommandHandler _handler;
 
     public CreateUserCommandHandlerTests()
     {
         _repoMock = new Mock<IUserRepository>();
-        _handler = new CreateUserCommandHandler(_repoMock.Object);
+        _customerClientMock = new Mock<ICustomerClient>();
+        _handler = new CreateUserCommandHandler(_repoMock.Object, _customerClientMock.Object);
     }
 
     [Fact]
-    public async Task Handle_Should_ReturnCreatedUser_When_ValidCommand()
+    public async Task Handle_Should_ReturnCreatedUser_When_ValidCustomerUser()
     {
-        // Arrange
         var command = new CreateUserCommand
         {
             Email = "test@example.com",
             FirstName = "Test",
             LastName = "Testsson",
             Role = Role.CustomerUser,
-            UserType = UserType.Customer,
             CustomerId = TestDataFactory.ValidMongoId2,
         };
 
         _repoMock.Setup(r => r.GetByEmailAsync(command.Email))
             .ReturnsAsync((User?)null);
 
+        _customerClientMock.Setup(c => c.GetByIdAsync(command.CustomerId))
+            .ReturnsAsync(new CustomerClientResponseDto { Id = command.CustomerId, CustomerType = CustomerType.Customer });
+
         var expected = TestDataFactory.ValidUser();
         _repoMock.Setup(r => r.CreateAsync(It.IsAny<User>()))
             .ReturnsAsync(expected);
 
-        // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
-        // Assert
         result.Should().Be(expected);
         _repoMock.Verify(r => r.CreateAsync(It.IsAny<User>()), Times.Once);
+        _customerClientMock.Verify(c => c.GetByIdAsync(command.CustomerId), Times.Once);
     }
 
     [Fact]
@@ -57,7 +61,6 @@ public class CreateUserCommandHandlerTests
             Email = "test@example.com",
             FirstName = "Test",
             LastName = "Testsson",
-            UserType = UserType.Customer,
         };
 
         _repoMock.Setup(r => r.GetByEmailAsync(command.Email))
@@ -69,7 +72,7 @@ public class CreateUserCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_Should_Succeed_When_CrewUser()
+    public async Task Handle_Should_Succeed_When_UserLinkedToCrewCustomer()
     {
         var command = new CreateUserCommand
         {
@@ -77,7 +80,6 @@ public class CreateUserCommandHandlerTests
             FirstName = "Crew",
             LastName = "Member",
             Role = Role.User,
-            UserType = UserType.Crew,
             CustomerId = TestDataFactory.ValidMongoId2,
             Occupation = "Ljudtekniker",
         };
@@ -85,13 +87,65 @@ public class CreateUserCommandHandlerTests
         _repoMock.Setup(r => r.GetByEmailAsync(command.Email))
             .ReturnsAsync((User?)null);
 
-        var expected = TestDataFactory.ValidUser(UserType.Crew);
+        _customerClientMock.Setup(c => c.GetByIdAsync(command.CustomerId))
+            .ReturnsAsync(new CustomerClientResponseDto { Id = command.CustomerId, CustomerType = CustomerType.Crew });
+
+        var expected = TestDataFactory.ValidUser(isCrew: true);
         _repoMock.Setup(r => r.CreateAsync(It.IsAny<User>()))
             .ReturnsAsync(expected);
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
         result.Should().Be(expected);
+        _customerClientMock.Verify(c => c.GetByIdAsync(command.CustomerId), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_Should_ThrowNotFoundException_When_CustomerNotFound()
+    {
+        var command = new CreateUserCommand
+        {
+            Email = "test@example.com",
+            FirstName = "Test",
+            LastName = "Testsson",
+            Role = Role.CustomerUser,
+            CustomerId = TestDataFactory.ValidMongoId2,
+        };
+
+        _repoMock.Setup(r => r.GetByEmailAsync(command.Email))
+            .ReturnsAsync((User?)null);
+
+        _customerClientMock.Setup(c => c.GetByIdAsync(command.CustomerId))
+            .ReturnsAsync((CustomerClientResponseDto?)null);
+
+        var act = () => _handler.Handle(command, CancellationToken.None);
+
+        await act.Should().ThrowAsync<NotFoundException>()
+            .WithMessage("*not found*");
+    }
+
+    [Fact]
+    public async Task Handle_Should_SkipCustomerValidation_When_NoCustomerIdProvided()
+    {
+        var command = new CreateUserCommand
+        {
+            Email = "admin@example.com",
+            FirstName = "Admin",
+            LastName = "Adminsson",
+            Role = Role.Superuser,
+        };
+
+        _repoMock.Setup(r => r.GetByEmailAsync(command.Email))
+            .ReturnsAsync((User?)null);
+
+        var expected = TestDataFactory.ValidUser();
+        _repoMock.Setup(r => r.CreateAsync(It.IsAny<User>()))
+            .ReturnsAsync(expected);
+
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        result.Should().Be(expected);
+        _customerClientMock.Verify(c => c.GetByIdAsync(It.IsAny<string>()), Times.Never);
     }
 
     [Fact]
@@ -102,12 +156,15 @@ public class CreateUserCommandHandlerTests
             Email = "test@example.com",
             FirstName = "Test",
             LastName = "Testsson",
-            UserType = UserType.Customer,
             CustomerId = TestDataFactory.ValidMongoId2,
         };
 
         _repoMock.Setup(r => r.GetByEmailAsync(command.Email))
             .ReturnsAsync((User?)null);
+
+        _customerClientMock.Setup(c => c.GetByIdAsync(command.CustomerId))
+            .ReturnsAsync(new CustomerClientResponseDto { Id = command.CustomerId, CustomerType = CustomerType.Customer });
+
         _repoMock.Setup(r => r.CreateAsync(It.IsAny<User>()))
             .ReturnsAsync(TestDataFactory.ValidUser());
 
@@ -116,30 +173,5 @@ public class CreateUserCommandHandlerTests
         _repoMock.Verify(r => r.CreateAsync(
             It.Is<User>(u => u.Email == "test@example.com" && u.FirstName == "Test")),
             Times.Once);
-    }
-
-    [Fact]
-    public async Task Handle_Should_Succeed_When_AdminUser()
-    {
-        var command = new CreateUserCommand
-        {
-            Email = "admin@example.com",
-            FirstName = "Admin",
-            LastName = "Adminsson",
-            Role = Role.Superuser,
-            UserType = UserType.Admin,
-            CustomerId = TestDataFactory.ValidMongoId2,
-        };
-
-        _repoMock.Setup(r => r.GetByEmailAsync(command.Email))
-            .ReturnsAsync((User?)null);
-
-        var expected = TestDataFactory.ValidUser(UserType.Admin);
-        _repoMock.Setup(r => r.CreateAsync(It.IsAny<User>()))
-            .ReturnsAsync(expected);
-
-        var result = await _handler.Handle(command, CancellationToken.None);
-
-        result.Should().Be(expected);
     }
 }

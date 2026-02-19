@@ -36,6 +36,43 @@ public class UpdateUserRequestDtoValidatorTests
     }
 
     [Fact]
+    public void Validate_Should_Fail_When_CustomerIdInvalidObjectId()
+    {
+        var dto = new UpdateUserRequestDto
+        {
+            Id = TestDataFactory.ValidMongoId,
+            CustomerId = "not-valid",
+        };
+        var result = _validator.TestValidate(dto);
+        result.ShouldHaveValidationErrorFor(x => x.CustomerId)
+            .WithErrorMessage("CustomerId must be a valid MongoDB ObjectId.");
+    }
+
+    [Fact]
+    public void Validate_Should_Pass_When_CustomerIdValidObjectId()
+    {
+        var dto = new UpdateUserRequestDto
+        {
+            Id = TestDataFactory.ValidMongoId,
+            CustomerId = TestDataFactory.ValidMongoId2,
+        };
+        var result = _validator.TestValidate(dto);
+        result.ShouldNotHaveValidationErrorFor(x => x.CustomerId);
+    }
+
+    [Fact]
+    public void Validate_Should_Pass_When_CustomerIdNull()
+    {
+        var dto = new UpdateUserRequestDto
+        {
+            Id = TestDataFactory.ValidMongoId,
+            CustomerId = null,
+        };
+        var result = _validator.TestValidate(dto);
+        result.ShouldNotHaveValidationErrorFor(x => x.CustomerId);
+    }
+
+    [Fact]
     public void Validate_Should_Fail_When_EmailInvalid()
     {
         var dto = new UpdateUserRequestDto

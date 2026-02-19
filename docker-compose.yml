@@ -4,7 +4,7 @@ services:
       context: ./Customer
       dockerfile: Dockerfile
     ports:
-      - "5063:8080"
+      - "6063:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - MongoDbSettings__ConnectionString=mongodb://mongodb:27017
@@ -19,13 +19,16 @@ services:
       context: ./User
       dockerfile: Dockerfile
     ports:
-      - "5062:8080"
+      - "6062:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - MongoDbSettings__ConnectionString=mongodb://mongodb:27017
       - MongoDbSettings__DatabaseName=thenorsound
       - MongoDbSettings__UserCollectionName=users
+      - CustomerClientConfiguration__BaseUrl=http://customer-service:8080
     depends_on:
+      customer-service:
+        condition: service_started
       mongodb:
         condition: service_started
 

@@ -3,6 +3,7 @@ namespace API.DTOs.Request;
 public class UpdateUserRequestDto
 {
     public string Id { get; set; } = string.Empty;
+    public string? CustomerId { get; set; }
     public string? Email { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
@@ -10,7 +11,6 @@ public class UpdateUserRequestDto
 
     // Crew-specific fields
     public string? Occupation { get; set; }
-    public decimal? CostPerHour { get; set; }
     public string? About { get; set; }
     public List<string>? PreviousJobs { get; set; }
     public List<SkillItemDto>? Skills { get; set; }

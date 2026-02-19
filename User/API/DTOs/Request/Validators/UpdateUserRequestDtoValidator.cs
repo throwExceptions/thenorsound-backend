@@ -12,6 +12,13 @@ public class UpdateUserRequestDtoValidator : AbstractValidator<UpdateUserRequest
             .Must(id => ObjectId.TryParse(id, out _))
             .WithMessage("Id must be a valid MongoDB ObjectId.");
 
+        When(x => !string.IsNullOrWhiteSpace(x.CustomerId), () =>
+        {
+            RuleFor(x => x.CustomerId)
+                .Must(id => ObjectId.TryParse(id, out _))
+                .WithMessage("CustomerId must be a valid MongoDB ObjectId.");
+        });
+
         When(x => !string.IsNullOrWhiteSpace(x.Email), () =>
         {
             RuleFor(x => x.Email)
@@ -39,7 +46,7 @@ public class UpdateUserRequestDtoValidator : AbstractValidator<UpdateUserRequest
         When(x => !string.IsNullOrWhiteSpace(x.Phone), () =>
         {
             RuleFor(x => x.Phone)
-                .Matches(@"^(\+46|0)[1-9]\d{7,9}$")
+                .Matches(@"^(\+46|0)[\s\-]?[1-9][\d\s\-]{6,13}$")
                 .WithMessage("Phone must be a valid Swedish phone number.");
         });
 

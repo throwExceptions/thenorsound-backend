@@ -9,7 +9,7 @@ public static class TestDataFactory
     public const string ValidMongoId2 = "507f1f77bcf86cd799439022";
 
     public static User ValidUser(
-        UserType userType = UserType.Customer,
+        bool isCrew = false,
         List<Skill>? skills = null)
     {
         return new User
@@ -19,23 +19,21 @@ public static class TestDataFactory
             FirstName = "Test",
             LastName = "Testsson",
             Role = Role.CustomerUser,
-            UserType = userType,
             CustomerId = ValidMongoId2,
-            Occupation = userType == UserType.Crew ? "Ljudtekniker" : null,
-            CostPerHour = userType == UserType.Crew ? 500m : null,
-            About = userType == UserType.Crew ? "Erfaren tekniker" : null,
-            PreviousJobs = userType == UserType.Crew ? new List<string> { "Festival 2024" } : null,
+            Occupation = isCrew ? "Ljudtekniker" : null,
+            About = isCrew ? "Erfaren tekniker" : null,
+            PreviousJobs = isCrew ? new List<string> { "Festival 2024" } : null,
             Skills = skills,
-            Image = userType == UserType.Crew ? "profile.jpg" : null,
+            Image = isCrew ? "profile.jpg" : null,
             Phone = "+46701234567",
-            Ssn = userType == UserType.Crew ? "199001011234" : null,
-            Address = userType == UserType.Crew ? "Testgatan 1" : null,
-            City = userType == UserType.Crew ? "Stockholm" : null,
-            Zip = userType == UserType.Crew ? "11122" : null,
+            Ssn = isCrew ? "199001011234" : null,
+            Address = isCrew ? "Testgatan 1" : null,
+            City = isCrew ? "Stockholm" : null,
+            Zip = isCrew ? "11122" : null,
             Co = null,
-            Bank = userType == UserType.Crew ? "Nordea" : null,
-            BankAccount = userType == UserType.Crew ? "1234-5678901234" : null,
-            IsEmployee = userType == UserType.Crew ? false : null,
+            Bank = isCrew ? "Nordea" : null,
+            BankAccount = isCrew ? "1234-5678901234" : null,
+            IsEmployee = isCrew ? false : null,
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
@@ -60,8 +58,7 @@ public static class TestDataFactory
         };
     }
 
-    public static CreateUserRequestDto ValidCreateRequest(
-        int userType = 2)
+    public static CreateUserRequestDto ValidCreateRequest()
     {
         return new CreateUserRequestDto
         {
@@ -69,9 +66,7 @@ public static class TestDataFactory
             FirstName = "Test",
             LastName = "Testsson",
             Role = 3,
-            UserType = userType,
             CustomerId = ValidMongoId2,
-            Occupation = userType == 3 ? "Ljudtekniker" : null,
             Phone = "+46701234567",
         };
     }

@@ -1,4 +1,5 @@
-﻿namespace Domain.Enums;
+namespace Domain.Enums;
+
 public enum CustomerType
 {
     Customer = 1,

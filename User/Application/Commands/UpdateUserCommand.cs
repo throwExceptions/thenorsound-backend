@@ -5,6 +5,7 @@ namespace Application.Commands;
 public class UpdateUserCommand : IRequest<bool>
 {
     public string Id { get; set; } = string.Empty;
+    public string? CustomerId { get; set; }
     public string? Email { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
@@ -12,7 +13,6 @@ public class UpdateUserCommand : IRequest<bool>
 
     // Crew-specific fields
     public string? Occupation { get; set; }
-    public decimal? CostPerHour { get; set; }
     public string? About { get; set; }
     public List<string>? PreviousJobs { get; set; }
     public List<Skill>? Skills { get; set; }

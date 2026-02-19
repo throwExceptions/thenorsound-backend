@@ -21,7 +21,6 @@ public static class DtoMappingConfiguration
         // User → UserResponseDto (domain → response)
         TypeAdapterConfig<User, UserResponseDto>.NewConfig()
             .Map(dest => dest.Role, src => (int)src.Role)
-            .Map(dest => dest.UserType, src => (int)src.UserType)
             .Map(dest => dest.Name, src => $"{src.FirstName} {src.LastName}".Trim())
             .Map(dest => dest.Skills, src => src.Skills != null ? src.Skills.Adapt<List<SkillResponseDto>>() : null);
     }

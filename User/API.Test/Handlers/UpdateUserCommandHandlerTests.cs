@@ -1,4 +1,6 @@
 using API.Test.Helpers;
+using Application.Clients;
+using Application.Clients.DTOs.Response;
 using Application.Commands;
 using Application.Exceptions;
 using Domain.Enums;
@@ -11,12 +13,14 @@ namespace API.Test.Handlers;
 public class UpdateUserCommandHandlerTests
 {
     private readonly Mock<IUserRepository> _repoMock;
+    private readonly Mock<ICustomerClient> _customerClientMock;
     private readonly UpdateUserCommandHandler _handler;
 
     public UpdateUserCommandHandlerTests()
     {
         _repoMock = new Mock<IUserRepository>();
-        _handler = new UpdateUserCommandHandler(_repoMock.Object);
+        _customerClientMock = new Mock<ICustomerClient>();
+        _handler = new UpdateUserCommandHandler(_repoMock.Object, _customerClientMock.Object);
     }
 
     [Fact]
@@ -156,7 +160,7 @@ public class UpdateUserCommandHandlerTests
     [Fact]
     public async Task Handle_Should_UpdateSkills_When_SkillsProvided()
     {
-        var existing = TestDataFactory.ValidUser(UserType.Crew);
+        var existing = TestDataFactory.ValidUser(isCrew: true);
 
         _repoMock.Setup(r => r.GetByIdAsync(TestDataFactory.ValidMongoId))
             .ReturnsAsync(existing);
@@ -201,7 +205,7 @@ public class UpdateUserCommandHandlerTests
     [Fact]
     public async Task Handle_Should_UpdateIsEmployee_When_ValueProvided()
     {
-        var existing = TestDataFactory.ValidUser(UserType.Crew);
+        var existing = TestDataFactory.ValidUser(isCrew: true);
 
         _repoMock.Setup(r => r.GetByIdAsync(TestDataFactory.ValidMongoId))
             .ReturnsAsync(existing);
@@ -217,5 +221,76 @@ public class UpdateUserCommandHandlerTests
         await _handler.Handle(command, CancellationToken.None);
 
         existing.IsEmployee.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Handle_Should_ValidateAndUpdateCustomerId_When_UserChangesCustomer()
+    {
+        var newCustomerId = "507f1f77bcf86cd799439033";
+        var existing = TestDataFactory.ValidUser();
+
+        _repoMock.Setup(r => r.GetByIdAsync(TestDataFactory.ValidMongoId))
+            .ReturnsAsync(existing);
+        _repoMock.Setup(r => r.UpdateAsync(TestDataFactory.ValidMongoId, It.IsAny<User>()))
+            .ReturnsAsync(true);
+
+        _customerClientMock.Setup(c => c.GetByIdAsync(newCustomerId))
+            .ReturnsAsync(new CustomerClientResponseDto { Id = newCustomerId, CustomerType = CustomerType.Customer });
+
+        var command = new UpdateUserCommand
+        {
+            Id = TestDataFactory.ValidMongoId,
+            CustomerId = newCustomerId,
+        };
+
+        await _handler.Handle(command, CancellationToken.None);
+
+        existing.CustomerId.Should().Be(newCustomerId);
+        _customerClientMock.Verify(c => c.GetByIdAsync(newCustomerId), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_Should_ThrowNotFoundException_When_CustomerNotFoundOnUpdate()
+    {
+        var newCustomerId = "507f1f77bcf86cd799439033";
+        var existing = TestDataFactory.ValidUser();
+
+        _repoMock.Setup(r => r.GetByIdAsync(TestDataFactory.ValidMongoId))
+            .ReturnsAsync(existing);
+
+        _customerClientMock.Setup(c => c.GetByIdAsync(newCustomerId))
+            .ReturnsAsync((CustomerClientResponseDto?)null);
+
+        var command = new UpdateUserCommand
+        {
+            Id = TestDataFactory.ValidMongoId,
+            CustomerId = newCustomerId,
+        };
+
+        var act = () => _handler.Handle(command, CancellationToken.None);
+
+        await act.Should().ThrowAsync<NotFoundException>()
+            .WithMessage("*not found*");
+    }
+
+    [Fact]
+    public async Task Handle_Should_NotCallCustomerClient_When_CustomerIdNotProvided()
+    {
+        var existing = TestDataFactory.ValidUser();
+
+        _repoMock.Setup(r => r.GetByIdAsync(TestDataFactory.ValidMongoId))
+            .ReturnsAsync(existing);
+        _repoMock.Setup(r => r.UpdateAsync(TestDataFactory.ValidMongoId, It.IsAny<User>()))
+            .ReturnsAsync(true);
+
+        var command = new UpdateUserCommand
+        {
+            Id = TestDataFactory.ValidMongoId,
+            FirstName = "Updated",
+        };
+
+        await _handler.Handle(command, CancellationToken.None);
+
+        _customerClientMock.Verify(c => c.GetByIdAsync(It.IsAny<string>()), Times.Never);
     }
 }

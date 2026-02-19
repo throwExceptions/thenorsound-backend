@@ -51,7 +51,7 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssemblies(typeof(CreateUserCommandHandler).Assembly));
 
 // Register Infrastructure services (MongoDB, Repositories)
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
 
 // Health checks
 builder.Services.AddHealthChecks()

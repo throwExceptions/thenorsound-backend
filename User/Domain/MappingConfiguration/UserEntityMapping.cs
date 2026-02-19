@@ -12,14 +12,12 @@ public static class UserEntityMapping
         TypeAdapterConfig<UserEntity, User>
             .NewConfig()
             .Map(dest => dest.Role, src => (Role)src.Role)
-            .Map(dest => dest.UserType, src => (UserType)src.UserType)
             .Map(dest => dest.Skills, src => src.Skills != null ? src.Skills.Adapt<List<Skill>>() : null);
 
         // User → UserEntity
         TypeAdapterConfig<User, UserEntity>
             .NewConfig()
             .Map(dest => dest.Role, src => (int)src.Role)
-            .Map(dest => dest.UserType, src => (int)src.UserType)
             .Map(dest => dest.Skills, src => src.Skills != null ? src.Skills.Adapt<List<SkillEntity>>() : null);
 
         // SkillEntity → Skill

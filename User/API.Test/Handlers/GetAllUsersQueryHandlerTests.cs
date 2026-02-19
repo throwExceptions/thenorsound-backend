@@ -36,16 +36,16 @@ public class GetAllUsersQueryHandlerTests
     [Fact]
     public async Task Handle_Should_ReturnFilteredUsers_When_UserTypeProvided()
     {
-        var query = new GetAllUsersQuery { UserType = UserType.Crew };
-        var expected = new List<User> { TestDataFactory.ValidUser(UserType.Crew) };
+        var query = new GetAllUsersQuery { UserType = CustomerType.Crew };
+        var expected = new List<User> { TestDataFactory.ValidUser(CustomerType.Crew) };
 
-        _repoMock.Setup(r => r.GetAllAsync((int)UserType.Crew))
+        _repoMock.Setup(r => r.GetAllAsync((int)CustomerType.Crew))
             .ReturnsAsync(expected);
 
         var result = await _handler.Handle(query, CancellationToken.None);
 
         result.Should().BeEquivalentTo(expected);
-        _repoMock.Verify(r => r.GetAllAsync((int)UserType.Crew), Times.Once);
+        _repoMock.Verify(r => r.GetAllAsync((int)CustomerType.Crew), Times.Once);
     }
 
     [Fact]

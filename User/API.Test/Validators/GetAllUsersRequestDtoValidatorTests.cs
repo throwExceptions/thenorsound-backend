@@ -27,7 +27,7 @@ public class GetAllUsersRequestDtoValidatorTests
     [Fact]
     public void Validate_Should_Pass_When_FilterIsCrew()
     {
-        var dto = new GetAllUsersRequestDto { UserType = 3 };
+        var dto = new GetAllUsersRequestDto { UserType = 2 };
         var result = _validator.TestValidate(dto);
         result.ShouldNotHaveAnyValidationErrors();
     }
@@ -38,6 +38,6 @@ public class GetAllUsersRequestDtoValidatorTests
         var dto = new GetAllUsersRequestDto { UserType = 99 };
         var result = _validator.TestValidate(dto);
         result.ShouldHaveValidationErrorFor(x => x.UserType)
-            .WithErrorMessage("UserType must be 1 (Admin), 2 (Customer), or 3 (Crew).");
+            .WithErrorMessage("UserType must be 1 (Customer), 2 (Crew), or 3 (Admin).");
     }
 }

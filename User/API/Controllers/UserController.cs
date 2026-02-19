@@ -26,27 +26,20 @@ public class UserController(
     : BaseController<UserController>
 {
     /// <summary>
-    /// Get all users (optional filter by userType)
+    /// Get all users
     /// </summary>
-    /// <param name="userType">Filter: 1=Admin, 2=Customer, 3=Crew</param>
     [HttpGet]
     [ProducesResponseType(typeof(BaseResponseDto<IEnumerable<UserResponseDto>>), 200)]
-    public async Task<IActionResult> GetAllUsers([FromQuery] int? userType = null)
+    public async Task<IActionResult> GetAllUsers()
     {
-        var request = new GetAllUsersRequestDto { UserType = userType };
+        var request = new GetAllUsersRequestDto();
 
         return await this.TryExecuteAsync(
             request,
             getAllValidator,
             async () =>
             {
-                var query = new GetAllUsersQuery
-                {
-                    UserType = userType.HasValue
-                        ? (Domain.Enums.UserType)userType.Value
-                        : null
-                };
-
+                var query = new GetAllUsersQuery();
                 var result = await mediator.Send(query);
 
                 return this.Ok(new BaseResponseDto<IEnumerable<UserResponseDto>>

@@ -172,19 +172,19 @@ public class UserControllerTests
     public async Task CreateUser_Should_MapResponseCorrectly_When_CrewWithSkills()
     {
         var skill = TestDataFactory.ValidSkill();
-        var user = TestDataFactory.ValidUser(UserType.Crew, skills: new List<Skill> { skill });
+        var user = TestDataFactory.ValidUser(CustomerType.Crew, skills: new List<Skill> { skill });
 
         _mediatorMock.Setup(m => m.Send(It.IsAny<CreateUserCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
-        var request = TestDataFactory.ValidCreateRequest(userType: 3);
+        var request = TestDataFactory.ValidCreateRequest(userType: 2);
         request.Occupation = "Ljudtekniker";
 
         var result = await _controller.CreateUser(request);
 
         var createdResult = result.Should().BeOfType<CreatedResult>().Subject;
         var response = createdResult.Value.Should().BeOfType<BaseResponseDto<UserResponseDto>>().Subject;
-        response.Result.UserType.Should().Be((int)UserType.Crew);
+        response.Result.UserType.Should().Be((int)CustomerType.Crew);
         response.Result.Skills.Should().HaveCount(1);
     }
 

@@ -16,18 +16,12 @@ public class UserEntity : BaseEntity
     [BsonElement("role")]
     public int Role { get; set; }
 
-    [BsonElement("userType")]
-    public int UserType { get; set; }
-
     [BsonElement("customerId")]
     public string CustomerId { get; set; } = string.Empty;
 
     // Crew-specific fields
     [BsonElement("occupation")]
     public string? Occupation { get; set; }
-
-    [BsonElement("costPerHour")]
-    public decimal? CostPerHour { get; set; }
 
     [BsonElement("about")]
     public string? About { get; set; }

@@ -1,10 +1,11 @@
+using Application.Clients;
 using Application.Exceptions;
 using Domain.Repositories;
 using MediatR;
 
 namespace Application.Commands;
 
-public class UpdateUserCommandHandler(IUserRepository userRepository)
+public class UpdateUserCommandHandler(IUserRepository userRepository, ICustomerClient customerClient)
     : IRequestHandler<UpdateUserCommand, bool>
 {
     public async Task<bool> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
@@ -15,9 +16,19 @@ public class UpdateUserCommandHandler(IUserRepository userRepository)
             throw new NotFoundException($"User with ID '{request.Id}' not found.");
         }
 
+        if (!string.IsNullOrWhiteSpace(request.CustomerId))
+        {
+            var customer = await customerClient.GetByIdAsync(request.CustomerId);
+            if (customer == null)
+            {
+                throw new NotFoundException($"Customer with ID '{request.CustomerId}' not found.", "Customer", request.CustomerId);
+            }
+
+            user.CustomerId = request.CustomerId;
+        }
+
         if (!string.IsNullOrWhiteSpace(request.Email))
         {
-            // Check for duplicate email if changing
             if (request.Email != user.Email)
             {
                 var existingUser = await userRepository.GetByEmailAsync(request.Email);
@@ -42,9 +53,6 @@ public class UpdateUserCommandHandler(IUserRepository userRepository)
         // Crew-specific fields
         if (!string.IsNullOrWhiteSpace(request.Occupation))
             user.Occupation = request.Occupation;
-
-        if (request.CostPerHour.HasValue)
-            user.CostPerHour = request.CostPerHour;
 
         if (!string.IsNullOrWhiteSpace(request.About))
             user.About = request.About;

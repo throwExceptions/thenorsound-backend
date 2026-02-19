@@ -77,21 +77,12 @@ public class CreateUserRequestDtoValidatorTests
     }
 
     [Fact]
-    public void Validate_Should_Fail_When_UserTypeOutOfRange()
+    public void Validate_Should_Pass_When_CustomerIdEmpty()
     {
         var dto = TestDataFactory.ValidCreateRequest();
-        dto.UserType = 99;
+        dto.CustomerId = null;
         var result = _validator.TestValidate(dto);
-        result.ShouldHaveValidationErrorFor(x => x.UserType);
-    }
-
-    [Fact]
-    public void Validate_Should_Fail_When_CustomerIdEmpty()
-    {
-        var dto = TestDataFactory.ValidCreateRequest();
-        dto.CustomerId = string.Empty;
-        var result = _validator.TestValidate(dto);
-        result.ShouldHaveValidationErrorFor(x => x.CustomerId);
+        result.ShouldNotHaveValidationErrorFor(x => x.CustomerId);
     }
 
     [Fact]
@@ -105,19 +96,9 @@ public class CreateUserRequestDtoValidatorTests
     }
 
     [Fact]
-    public void Validate_Should_Fail_When_CrewWithoutOccupation()
+    public void Validate_Should_Pass_When_OccupationProvided()
     {
-        var dto = TestDataFactory.ValidCreateRequest(userType: 3);
-        dto.Occupation = null;
-        var result = _validator.TestValidate(dto);
-        result.ShouldHaveValidationErrorFor(x => x.Occupation)
-            .WithErrorMessage("Occupation is required for crew members.");
-    }
-
-    [Fact]
-    public void Validate_Should_Pass_When_CrewWithOccupation()
-    {
-        var dto = TestDataFactory.ValidCreateRequest(userType: 3);
+        var dto = TestDataFactory.ValidCreateRequest();
         dto.Occupation = "Ljudtekniker";
         var result = _validator.TestValidate(dto);
         result.ShouldNotHaveValidationErrorFor(x => x.Occupation);

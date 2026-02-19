@@ -8,7 +8,6 @@ public class GetAllUsersQueryHandler(IUserRepository userRepository)
 {
     public async Task<IEnumerable<User>> Handle(GetAllUsersQuery request, CancellationToken cancellationToken)
     {
-        var userType = request.UserType.HasValue ? (int?)request.UserType.Value : null;
-        return await userRepository.GetAllAsync(userType);
+        return await userRepository.GetAllAsync();
     }
 }
