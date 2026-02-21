@@ -27,11 +27,21 @@ Service/
 
 ### User Service (`User/`)
 - CRUD for users belonging to customers
-- `UserType` enum: Customer=1, Crew=2, Admin=3 (mirrors CustomerType)
+- `Role` enum: Superuser=1, Admin=2, User=3
 - Calls Customer service to validate CustomerType matches UserType on create/update
-- Admin users (UserType=1 in validator, Admin in enum) skip customer validation entirely
-- CustomerId required for non-Admin users
+- **Superuser (Role=1)** skips CustomerType validation, CustomerId optional
+- Admin and User require CustomerId on create
 - Ports: dotnet run HTTP 50572 / HTTPS 50571, Docker 6062
+
+#### CustomerId update rules (`UpdateUserCommandHandler`)
+- `request.CustomerId == null` → field not sent, no change (all roles)
+- `request.CustomerId == ""` → clear CustomerId, only applied if `user.Role == Superuser`
+- `request.CustomerId == "someId"` → validate customer exists, only applied if `user.Role == Superuser`
+- Admin/User: CustomerId block is always skipped regardless of what is sent
+
+#### UserRepository.UpdateAsync
+All fields are explicitly copied to `existingEntity` before `ReplaceOneAsync`.
+`CustomerId` is included: `existingEntity.CustomerId = user.CustomerId ?? string.Empty`
 
 ### Service-to-Service Communication (User → Customer)
 - Interface: `Application/Clients/ICustomerClient.cs`
