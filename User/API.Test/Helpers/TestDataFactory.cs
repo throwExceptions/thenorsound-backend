@@ -10,7 +10,8 @@ public static class TestDataFactory
 
     public static User ValidUser(
         bool isCrew = false,
-        List<Skill>? skills = null)
+        List<Skill>? skills = null,
+        Role role = Role.User)
     {
         return new User
         {
@@ -18,7 +19,7 @@ public static class TestDataFactory
             Email = "test@example.com",
             FirstName = "Test",
             LastName = "Testsson",
-            Role = Role.CustomerUser,
+            Role = role,
             CustomerId = ValidMongoId2,
             Occupation = isCrew ? "Ljudtekniker" : null,
             About = isCrew ? "Erfaren tekniker" : null,

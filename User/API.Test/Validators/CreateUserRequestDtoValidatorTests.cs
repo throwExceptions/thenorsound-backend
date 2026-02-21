@@ -73,16 +73,29 @@ public class CreateUserRequestDtoValidatorTests
         var dto = TestDataFactory.ValidCreateRequest();
         dto.Role = 99;
         var result = _validator.TestValidate(dto);
-        result.ShouldHaveValidationErrorFor(x => x.Role);
+        result.ShouldHaveValidationErrorFor(x => x.Role)
+            .WithErrorMessage("Role must be 1 (Superuser), 2 (Admin) or 3 (User).");
     }
 
     [Fact]
-    public void Validate_Should_Pass_When_CustomerIdEmpty()
+    public void Validate_Should_Pass_When_SuperuserAndNoCustomerId()
     {
         var dto = TestDataFactory.ValidCreateRequest();
+        dto.Role = 1; // Superuser
         dto.CustomerId = null;
         var result = _validator.TestValidate(dto);
         result.ShouldNotHaveValidationErrorFor(x => x.CustomerId);
+    }
+
+    [Fact]
+    public void Validate_Should_Fail_When_AdminRoleAndNoCustomerId()
+    {
+        var dto = TestDataFactory.ValidCreateRequest();
+        dto.Role = 2; // Admin
+        dto.CustomerId = null;
+        var result = _validator.TestValidate(dto);
+        result.ShouldHaveValidationErrorFor(x => x.CustomerId)
+            .WithErrorMessage("CustomerId is required for Admin and User roles.");
     }
 
     [Fact]

@@ -11,33 +11,8 @@ public class GetAllUsersRequestDtoValidatorTests
     [Fact]
     public void Validate_Should_Pass_When_NoFilter()
     {
-        var dto = new GetAllUsersRequestDto { UserType = null };
+        var dto = new GetAllUsersRequestDto();
         var result = _validator.TestValidate(dto);
         result.ShouldNotHaveAnyValidationErrors();
-    }
-
-    [Fact]
-    public void Validate_Should_Pass_When_ValidFilter()
-    {
-        var dto = new GetAllUsersRequestDto { UserType = 1 };
-        var result = _validator.TestValidate(dto);
-        result.ShouldNotHaveAnyValidationErrors();
-    }
-
-    [Fact]
-    public void Validate_Should_Pass_When_FilterIsCrew()
-    {
-        var dto = new GetAllUsersRequestDto { UserType = 2 };
-        var result = _validator.TestValidate(dto);
-        result.ShouldNotHaveAnyValidationErrors();
-    }
-
-    [Fact]
-    public void Validate_Should_Fail_When_InvalidFilter()
-    {
-        var dto = new GetAllUsersRequestDto { UserType = 99 };
-        var result = _validator.TestValidate(dto);
-        result.ShouldHaveValidationErrorFor(x => x.UserType)
-            .WithErrorMessage("UserType must be 1 (Customer), 2 (Crew), or 3 (Admin).");
     }
 }

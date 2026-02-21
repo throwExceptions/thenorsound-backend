@@ -227,7 +227,7 @@ public class UpdateUserCommandHandlerTests
     public async Task Handle_Should_ValidateAndUpdateCustomerId_When_UserChangesCustomer()
     {
         var newCustomerId = "507f1f77bcf86cd799439033";
-        var existing = TestDataFactory.ValidUser();
+        var existing = TestDataFactory.ValidUser(role: Role.Superuser);
 
         _repoMock.Setup(r => r.GetByIdAsync(TestDataFactory.ValidMongoId))
             .ReturnsAsync(existing);
@@ -253,7 +253,7 @@ public class UpdateUserCommandHandlerTests
     public async Task Handle_Should_ThrowNotFoundException_When_CustomerNotFoundOnUpdate()
     {
         var newCustomerId = "507f1f77bcf86cd799439033";
-        var existing = TestDataFactory.ValidUser();
+        var existing = TestDataFactory.ValidUser(role: Role.Superuser);
 
         _repoMock.Setup(r => r.GetByIdAsync(TestDataFactory.ValidMongoId))
             .ReturnsAsync(existing);

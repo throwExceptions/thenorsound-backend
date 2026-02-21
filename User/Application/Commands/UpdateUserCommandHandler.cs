@@ -16,15 +16,22 @@ public class UpdateUserCommandHandler(IUserRepository userRepository, ICustomerC
             throw new NotFoundException($"User with ID '{request.Id}' not found.");
         }
 
-        if (!string.IsNullOrWhiteSpace(request.CustomerId))
+        if (request.CustomerId != null && user.Role == Domain.Enums.Role.Superuser)
         {
-            var customer = await customerClient.GetByIdAsync(request.CustomerId);
-            if (customer == null)
+            if (string.IsNullOrEmpty(request.CustomerId))
             {
-                throw new NotFoundException($"Customer with ID '{request.CustomerId}' not found.", "Customer", request.CustomerId);
+                user.CustomerId = string.Empty;
             }
+            else
+            {
+                var customer = await customerClient.GetByIdAsync(request.CustomerId);
+                if (customer == null)
+                {
+                    throw new NotFoundException($"Customer with ID '{request.CustomerId}' not found.", "Customer", request.CustomerId);
+                }
 
-            user.CustomerId = request.CustomerId;
+                user.CustomerId = request.CustomerId;
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(request.Email))

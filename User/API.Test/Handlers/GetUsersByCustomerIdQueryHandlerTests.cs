@@ -23,13 +23,13 @@ public class GetUsersByCustomerIdQueryHandlerTests
         var query = new GetUsersByCustomerIdQuery { CustomerId = TestDataFactory.ValidMongoId2 };
         var expected = new List<User> { TestDataFactory.ValidUser() };
 
-        _repoMock.Setup(r => r.GetByCustomerIdAsync(query.CustomerId, null))
+        _repoMock.Setup(r => r.GetByCustomerIdAsync(query.CustomerId))
             .ReturnsAsync(expected);
 
         var result = await _handler.Handle(query, CancellationToken.None);
 
         result.Should().BeEquivalentTo(expected);
-        _repoMock.Verify(r => r.GetByCustomerIdAsync(TestDataFactory.ValidMongoId2, null), Times.Once);
+        _repoMock.Verify(r => r.GetByCustomerIdAsync(TestDataFactory.ValidMongoId2), Times.Once);
     }
 
     [Fact]
@@ -37,7 +37,7 @@ public class GetUsersByCustomerIdQueryHandlerTests
     {
         var query = new GetUsersByCustomerIdQuery { CustomerId = TestDataFactory.ValidMongoId2 };
 
-        _repoMock.Setup(r => r.GetByCustomerIdAsync(query.CustomerId, null))
+        _repoMock.Setup(r => r.GetByCustomerIdAsync(query.CustomerId))
             .ReturnsAsync(new List<User>());
 
         var result = await _handler.Handle(query, CancellationToken.None);
@@ -50,11 +50,11 @@ public class GetUsersByCustomerIdQueryHandlerTests
     {
         var query = new GetUsersByCustomerIdQuery { CustomerId = TestDataFactory.ValidMongoId2 };
 
-        _repoMock.Setup(r => r.GetByCustomerIdAsync(query.CustomerId, null))
+        _repoMock.Setup(r => r.GetByCustomerIdAsync(query.CustomerId))
             .ReturnsAsync(new List<User>());
 
         await _handler.Handle(query, CancellationToken.None);
 
-        _repoMock.Verify(r => r.GetByCustomerIdAsync(TestDataFactory.ValidMongoId2, null), Times.Once);
+        _repoMock.Verify(r => r.GetByCustomerIdAsync(TestDataFactory.ValidMongoId2), Times.Once);
     }
 }

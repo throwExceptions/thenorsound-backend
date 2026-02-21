@@ -20,11 +20,12 @@ public class CreateUserRequestDtoValidator : AbstractValidator<CreateUserRequest
             .MaximumLength(200).WithMessage("LastName cannot exceed 200 characters.");
 
         RuleFor(x => x.Role)
-            .InclusiveBetween(1, 5).WithMessage("Role must be between 1 and 5.");
+            .InclusiveBetween(1, 3).WithMessage("Role must be 1 (Superuser), 2 (Admin) or 3 (User).");
 
-        When(x => !string.IsNullOrWhiteSpace(x.CustomerId), () =>
+        When(x => x.Role != (int)Domain.Enums.Role.Superuser, () =>
         {
             RuleFor(x => x.CustomerId)
+                .NotEmpty().WithMessage("CustomerId is required for Admin and User roles.")
                 .Must(id => ObjectId.TryParse(id, out _))
                 .WithMessage("CustomerId must be a valid MongoDB ObjectId.");
         });

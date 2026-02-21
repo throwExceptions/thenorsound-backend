@@ -32,7 +32,7 @@ public class CreateUserCommandHandlerTests
             Email = "test@example.com",
             FirstName = "Test",
             LastName = "Testsson",
-            Role = Role.CustomerUser,
+            Role = Role.User,
             CustomerId = TestDataFactory.ValidMongoId2,
         };
 
@@ -108,7 +108,7 @@ public class CreateUserCommandHandlerTests
             Email = "test@example.com",
             FirstName = "Test",
             LastName = "Testsson",
-            Role = Role.CustomerUser,
+            Role = Role.User,
             CustomerId = TestDataFactory.ValidMongoId2,
         };
 

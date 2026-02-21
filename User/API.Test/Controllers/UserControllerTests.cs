@@ -55,15 +55,6 @@ public class UserControllerTests
         response.Result.Should().HaveCount(1);
     }
 
-    [Fact]
-    public async Task GetAllUsers_Should_ReturnBadRequest_When_InvalidFilter()
-    {
-        var result = await _controller.GetAllUsers(userType: 99);
-
-        var objectResult = result.Should().BeOfType<ObjectResult>().Subject;
-        objectResult.StatusCode.Should().Be(400);
-    }
-
     // --- GetUserById ---
 
     [Fact]
@@ -172,19 +163,18 @@ public class UserControllerTests
     public async Task CreateUser_Should_MapResponseCorrectly_When_CrewWithSkills()
     {
         var skill = TestDataFactory.ValidSkill();
-        var user = TestDataFactory.ValidUser(CustomerType.Crew, skills: new List<Skill> { skill });
+        var user = TestDataFactory.ValidUser(isCrew: true, skills: new List<Skill> { skill });
 
         _mediatorMock.Setup(m => m.Send(It.IsAny<CreateUserCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
-        var request = TestDataFactory.ValidCreateRequest(userType: 2);
+        var request = TestDataFactory.ValidCreateRequest();
         request.Occupation = "Ljudtekniker";
 
         var result = await _controller.CreateUser(request);
 
         var createdResult = result.Should().BeOfType<CreatedResult>().Subject;
         var response = createdResult.Value.Should().BeOfType<BaseResponseDto<UserResponseDto>>().Subject;
-        response.Result.UserType.Should().Be((int)CustomerType.Crew);
         response.Result.Skills.Should().HaveCount(1);
     }
 

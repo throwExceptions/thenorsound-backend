@@ -40,7 +40,7 @@ public class UpdateUserRequestDtoValidator : AbstractValidator<UpdateUserRequest
         When(x => x.Role.HasValue, () =>
         {
             RuleFor(x => x.Role)
-                .InclusiveBetween(1, 5).WithMessage("Role must be between 1 and 5.");
+                .InclusiveBetween(1, 3).WithMessage("Role must be 1 (Superuser), 2 (Admin) or 3 (User).");
         });
 
         When(x => !string.IsNullOrWhiteSpace(x.Phone), () =>

@@ -1,6 +1,5 @@
 using API.Test.Helpers;
 using Application.Queries;
-using Domain.Enums;
 using Domain.Repositories;
 using FluentAssertions;
 using Moq;
@@ -21,39 +20,39 @@ public class GetAllUsersQueryHandlerTests
     [Fact]
     public async Task Handle_Should_ReturnAllUsers_When_NoFilterProvided()
     {
-        var query = new GetAllUsersQuery { UserType = null };
+        var query = new GetAllUsersQuery();
         var expected = new List<User> { TestDataFactory.ValidUser() };
 
-        _repoMock.Setup(r => r.GetAllAsync(null))
+        _repoMock.Setup(r => r.GetAllAsync())
             .ReturnsAsync(expected);
 
         var result = await _handler.Handle(query, CancellationToken.None);
 
         result.Should().BeEquivalentTo(expected);
-        _repoMock.Verify(r => r.GetAllAsync(null), Times.Once);
+        _repoMock.Verify(r => r.GetAllAsync(), Times.Once);
     }
 
     [Fact]
-    public async Task Handle_Should_ReturnFilteredUsers_When_UserTypeProvided()
+    public async Task Handle_Should_ReturnCrewUsers_When_CrewUsersExist()
     {
-        var query = new GetAllUsersQuery { UserType = CustomerType.Crew };
-        var expected = new List<User> { TestDataFactory.ValidUser(CustomerType.Crew) };
+        var query = new GetAllUsersQuery();
+        var expected = new List<User> { TestDataFactory.ValidUser(isCrew: true) };
 
-        _repoMock.Setup(r => r.GetAllAsync((int)CustomerType.Crew))
+        _repoMock.Setup(r => r.GetAllAsync())
             .ReturnsAsync(expected);
 
         var result = await _handler.Handle(query, CancellationToken.None);
 
         result.Should().BeEquivalentTo(expected);
-        _repoMock.Verify(r => r.GetAllAsync((int)CustomerType.Crew), Times.Once);
+        _repoMock.Verify(r => r.GetAllAsync(), Times.Once);
     }
 
     [Fact]
     public async Task Handle_Should_ReturnEmptyList_When_NoUsersExist()
     {
-        var query = new GetAllUsersQuery { UserType = null };
+        var query = new GetAllUsersQuery();
 
-        _repoMock.Setup(r => r.GetAllAsync(null))
+        _repoMock.Setup(r => r.GetAllAsync())
             .ReturnsAsync(new List<User>());
 
         var result = await _handler.Handle(query, CancellationToken.None);
