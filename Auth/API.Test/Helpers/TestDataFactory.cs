@@ -30,7 +30,7 @@ public static class TestDataFactory
         {
             Id = ValidMongoId2,
             Email = "test@example.com",
-            FirstName = "Test",
+            FirstName = "Testare",
             LastName = "Testsson",
             Role = 3,
             CustomerId = ValidMongoId
