@@ -26,7 +26,7 @@ public class JwtService(IOptions<JwtSettings> jwtSettings) : IJwtService
             new Claim("firstname", user.FirstName),
             new Claim("lastname", user.LastName),
             new Claim("role", user.Role.ToString()),
-            new Claim("customerId", user.CustomerId)
+            new Claim("customerId", user.CustomerId ?? string.Empty)
         };
 
         var token = new JwtSecurityToken(
