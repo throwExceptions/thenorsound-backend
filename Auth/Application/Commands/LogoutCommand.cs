@@ -1,0 +1,8 @@
+using MediatR;
+
+namespace Application.Commands;
+
+public class LogoutCommand : IRequest
+{
+    public string RefreshToken { get; set; } = string.Empty;
+}

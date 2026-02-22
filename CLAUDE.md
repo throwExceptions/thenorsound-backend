@@ -33,6 +33,15 @@ Service/
 - Admin and User require CustomerId on create
 - Ports: dotnet run HTTP 50572 / HTTPS 50571, Docker 6062
 
+### Auth Service (`Auth/`)
+- Issues and validates JWT access tokens (15 min, response body) and refresh tokens (7 days, HTTP-only cookie)
+- Own MongoDB collection: `credentials` — stores userId, email, passwordHash, refreshToken, refreshTokenExpiry
+- Calls User service (`GET /api/User/by-email/{email}`) to enrich JWT claims
+- Refresh token cookie path restricted to `/api/Auth/refresh` (token rotation on every refresh)
+- BCrypt (workFactor=12) for password hashing
+- Ports: dotnet run HTTP 5264 / HTTPS 7264, Docker 6061
+- User secrets required locally: `JwtSettings:SecretKey` (min 32 chars), `MongoDbSettings:ConnectionString`
+
 #### CustomerId update rules (`UpdateUserCommandHandler`)
 - `request.CustomerId == null` → field not sent, no change (all roles)
 - `request.CustomerId == ""` → clear CustomerId, only applied if `user.Role == Superuser`
