@@ -10,6 +10,7 @@ on:
     branches: [main]
     paths:
       - 'Auth/**'
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
