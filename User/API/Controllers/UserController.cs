@@ -5,6 +5,7 @@ using Application.Queries;
 using FluentValidation;
 using Mapster;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
@@ -14,6 +15,7 @@ namespace API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class UserController(
     IMediator mediator,
     ILogger<UserController> logger,
@@ -101,6 +103,7 @@ public class UserController(
     /// <summary>
     /// Get user by email (for Auth service)
     /// </summary>
+    [AllowAnonymous]
     [HttpGet("by-email/{email}")]
     [ProducesResponseType(typeof(BaseResponseDto<UserResponseDto>), 200)]
     [ProducesResponseType(404)]

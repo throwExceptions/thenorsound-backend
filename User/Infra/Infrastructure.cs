@@ -4,11 +4,14 @@ using Domain.Repositories;
 using Infra.Clients;
 using Infra.Repositories;
 using Infra.Settings;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
+using System.Text;
 
 namespace Infra;
 
@@ -62,6 +65,32 @@ public static class Infrastructure
         }
 
         services.AddScoped<IUserRepository, UserRepository>();
+
+        services.Configure<JwtSettings>(
+            configuration.GetSection("JwtSettings"));
+
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer();
+
+        services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+            .Configure<IOptions<JwtSettings>>((bearerOptions, jwtSettingsOptions) =>
+            {
+                var settings = jwtSettingsOptions.Value;
+                if (string.IsNullOrEmpty(settings.SecretKey))
+                    return;
+
+                bearerOptions.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = settings.Issuer,
+                    ValidAudience = settings.Audience,
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(settings.SecretKey))
+                };
+            });
 
         return services;
     }

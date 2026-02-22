@@ -5,6 +5,7 @@ using Application.Queries;
 using FluentValidation;
 using Mapster;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
@@ -14,6 +15,7 @@ namespace API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class CustomerController(
     IMediator mediator,
     ILogger<CustomerController> logger,
@@ -57,6 +59,7 @@ public class CustomerController(
     /// <summary>
     /// Get customer by ID
     /// </summary>
+    [AllowAnonymous]
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(BaseResponseDto<CustomerResponseDto>), 200)]
     [ProducesResponseType(404)]
