@@ -129,6 +129,7 @@ public class UserController(
     /// <summary>
     /// Create new user
     /// </summary>
+    [AllowAnonymous]
     [HttpPost]
     [ProducesResponseType(typeof(BaseResponseDto<UserResponseDto>), 201)]
     [ProducesResponseType(400)]
