@@ -8,6 +8,7 @@ public class User
     public string LastName { get; set; } = string.Empty;
     public Role Role { get; set; }
     public string CustomerId { get; set; } = string.Empty;
+    public int CustomerType { get; set; }
 
     // Crew-specific fields
     public string? Occupation { get; set; }

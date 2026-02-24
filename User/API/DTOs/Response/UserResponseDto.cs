@@ -9,6 +9,7 @@ public class UserResponseDto
     public string Name { get; set; } = string.Empty;
     public int Role { get; set; }
     public string CustomerId { get; set; } = string.Empty;
+    public int CustomerType { get; set; }
 
     // Crew-specific fields
     public string? Occupation { get; set; }

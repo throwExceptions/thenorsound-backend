@@ -5,7 +5,7 @@ using MediatR;
 
 namespace Application.Commands;
 
-public class UpdateUserCommandHandler(IUserRepository userRepository, ICustomerClient customerClient)
+public class UpdateUserCommandHandler(IUserRepository userRepository, ICustomerClient customerClient, IAuthClient authClient)
     : IRequestHandler<UpdateUserCommand, bool>
 {
     public async Task<bool> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
@@ -21,6 +21,7 @@ public class UpdateUserCommandHandler(IUserRepository userRepository, ICustomerC
             if (string.IsNullOrEmpty(request.CustomerId))
             {
                 user.CustomerId = string.Empty;
+                user.CustomerType = 0;
             }
             else
             {
@@ -31,9 +32,11 @@ public class UpdateUserCommandHandler(IUserRepository userRepository, ICustomerC
                 }
 
                 user.CustomerId = request.CustomerId;
+                user.CustomerType = (int)customer.CustomerType;
             }
         }
 
+        string? oldEmail = null;
         if (!string.IsNullOrWhiteSpace(request.Email))
         {
             if (request.Email != user.Email)
@@ -43,6 +46,8 @@ public class UpdateUserCommandHandler(IUserRepository userRepository, ICustomerC
                 {
                     throw new DuplicateException($"User with email '{request.Email}' already exists.");
                 }
+
+                oldEmail = user.Email;
             }
 
             user.Email = request.Email;
@@ -102,6 +107,13 @@ public class UpdateUserCommandHandler(IUserRepository userRepository, ICustomerC
 
         user.UpdatedAt = DateTime.UtcNow;
 
-        return await userRepository.UpdateAsync(request.Id, user);
+        var result = await userRepository.UpdateAsync(request.Id, user);
+
+        if (result && oldEmail != null)
+        {
+            await authClient.UpdateEmailAsync(oldEmail, user.Email);
+        }
+
+        return result;
     }
 }

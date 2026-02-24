@@ -8,4 +8,5 @@ public class UserClientResponseDto
     public string LastName { get; set; } = string.Empty;
     public int Role { get; set; }
     public string CustomerId { get; set; } = string.Empty;
+    public int CustomerType { get; set; }
 }

@@ -20,6 +20,7 @@ public class CreateUserCommandHandler(
             throw new DuplicateException($"User with email '{request.Email}' already exists.");
         }
 
+        int customerType = 0;
         if (!string.IsNullOrWhiteSpace(request.CustomerId))
         {
             var customer = await customerClient.GetByIdAsync(request.CustomerId);
@@ -27,9 +28,13 @@ public class CreateUserCommandHandler(
             {
                 throw new NotFoundException($"Customer with ID '{request.CustomerId}' not found.", "Customer", request.CustomerId);
             }
+            customerType = (int)customer.CustomerType;
         }
 
-        var createdUser = await userRepository.CreateAsync(request.Adapt<User>());
+        var user = request.Adapt<User>();
+        user.CustomerType = customerType;
+
+        var createdUser = await userRepository.CreateAsync(user);
 
         var credentialRegistered = await authClient.RegisterCredentialAsync(request.Email, request.Password);
         if (!credentialRegistered)

@@ -19,6 +19,9 @@ public class UserEntity : BaseEntity
     [BsonElement("customerId")]
     public string CustomerId { get; set; } = string.Empty;
 
+    [BsonElement("customerType")]
+    public int CustomerType { get; set; }
+
     // Crew-specific fields
     [BsonElement("occupation")]
     public string? Occupation { get; set; }

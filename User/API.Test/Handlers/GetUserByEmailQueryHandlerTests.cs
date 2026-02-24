@@ -1,4 +1,6 @@
 using API.Test.Helpers;
+using Application.Clients;
+using Application.Clients.DTOs.Response;
 using Application.Exceptions;
 using Application.Queries;
 using Domain.Repositories;
@@ -10,12 +12,14 @@ namespace API.Test.Handlers;
 public class GetUserByEmailQueryHandlerTests
 {
     private readonly Mock<IUserRepository> _repoMock;
+    private readonly Mock<ICustomerClient> _customerClientMock;
     private readonly GetUserByEmailQueryHandler _handler;
 
     public GetUserByEmailQueryHandlerTests()
     {
         _repoMock = new Mock<IUserRepository>();
-        _handler = new GetUserByEmailQueryHandler(_repoMock.Object);
+        _customerClientMock = new Mock<ICustomerClient>();
+        _handler = new GetUserByEmailQueryHandler(_repoMock.Object, _customerClientMock.Object);
     }
 
     [Fact]
@@ -56,5 +60,22 @@ public class GetUserByEmailQueryHandlerTests
         await _handler.Handle(query, CancellationToken.None);
 
         _repoMock.Verify(r => r.GetByEmailAsync("test@example.com"), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_Should_MigrateCustomerType_When_CustomerTypeIsZeroAndCustomerIdIsSet()
+    {
+        var query = new GetUserByEmailQuery { Email = "test@example.com" };
+        var user = TestDataFactory.ValidUser(customerType: 0);
+        var customer = new CustomerClientResponseDto { CustomerType = Domain.Enums.CustomerType.Crew };
+
+        _repoMock.Setup(r => r.GetByEmailAsync(query.Email)).ReturnsAsync(user);
+        _repoMock.Setup(r => r.UpdateAsync(user.Id, user)).ReturnsAsync(true);
+        _customerClientMock.Setup(c => c.GetByIdAsync(user.CustomerId)).ReturnsAsync(customer);
+
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        result!.CustomerType.Should().Be((int)Domain.Enums.CustomerType.Crew);
+        _repoMock.Verify(r => r.UpdateAsync(user.Id, user), Times.Once);
     }
 }

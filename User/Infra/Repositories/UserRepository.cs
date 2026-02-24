@@ -67,6 +67,7 @@ public class UserRepository(IMongoCollection<UserEntity> users) : IUserRepositor
         existingEntity.LastName = user.LastName;
         existingEntity.Role = (int)user.Role;
         existingEntity.CustomerId = user.CustomerId ?? string.Empty;
+        existingEntity.CustomerType = user.CustomerType;
         existingEntity.Occupation = user.Occupation;
         existingEntity.About = user.About;
         existingEntity.PreviousJobs = user.PreviousJobs;

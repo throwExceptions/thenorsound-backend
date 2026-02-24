@@ -42,4 +42,35 @@ public class AuthClient(HttpClient httpClient,
             throw;
         }
     }
+
+    public async Task<bool> UpdateEmailAsync(string oldEmail, string newEmail)
+    {
+        logger.LogInformation("PUT request to {Endpoint}", _config.UpdateCredentialEmailEndpoint);
+
+        try
+        {
+            var response = await httpClient.PutAsJsonAsync(_config.UpdateCredentialEmailEndpoint, new
+            {
+                oldEmail,
+                newEmail
+            });
+
+            if (!response.IsSuccessStatusCode)
+            {
+                logger.LogError("PUT failed. Status: {Status}, Reason: {Reason}, Url: {Url}",
+                    response.StatusCode,
+                    response.ReasonPhrase,
+                    response.RequestMessage?.RequestUri?.AbsoluteUri);
+                return false;
+            }
+
+            logger.LogInformation("PUT request successful for {Endpoint}", _config.UpdateCredentialEmailEndpoint);
+            return true;
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogError(ex, "HTTP error calling PUT {Endpoint}", _config.UpdateCredentialEmailEndpoint);
+            throw;
+        }
+    }
 }

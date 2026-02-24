@@ -113,6 +113,34 @@ public class AuthController(
         return Ok(new BaseResponseDto<bool> { Result = true });
     }
 
+    [HttpPut("credentials/email")]
+    public async Task<IActionResult> UpdateCredentialEmail([FromBody] UpdateCredentialEmailRequestDto request)
+    {
+        try
+        {
+            await mediator.Send(new UpdateCredentialEmailCommand
+            {
+                OldEmail = request.OldEmail,
+                NewEmail = request.NewEmail
+            });
+
+            return Ok(new BaseResponseDto<bool> { Result = true });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("Exception updating credential email.", ex);
+            return StatusCode(500, new BaseResponseDto<Domain.Models.Error>
+            {
+                Error = new Domain.Models.Error
+                {
+                    Type = Domain.Enums.ErrorType.UnknownError,
+                    ErrorMessage = ex.Message,
+                    FormValidationError = new List<KeyValuePair<string, object>>()
+                }
+            });
+        }
+    }
+
     [HttpPost("credentials")]
     public async Task<IActionResult> RegisterCredential([FromBody] RegisterCredentialRequestDto request)
     {

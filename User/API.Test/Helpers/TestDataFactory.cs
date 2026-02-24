@@ -11,7 +11,8 @@ public static class TestDataFactory
     public static User ValidUser(
         bool isCrew = false,
         List<Skill>? skills = null,
-        Role role = Role.User)
+        Role role = Role.User,
+        int customerType = 1)
     {
         return new User
         {
@@ -21,6 +22,7 @@ public static class TestDataFactory
             LastName = "Testsson",
             Role = role,
             CustomerId = ValidMongoId2,
+            CustomerType = customerType,
             Occupation = isCrew ? "Ljudtekniker" : null,
             About = isCrew ? "Erfaren tekniker" : null,
             PreviousJobs = isCrew ? new List<string> { "Festival 2024" } : null,
