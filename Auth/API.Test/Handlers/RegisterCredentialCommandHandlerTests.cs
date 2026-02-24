@@ -1,5 +1,4 @@
 using API.Test.Helpers;
-using Application.Clients;
 using Application.Commands;
 using Application.Exceptions;
 using Domain.Models;
@@ -12,27 +11,23 @@ namespace API.Test.Handlers;
 public class RegisterCredentialCommandHandlerTests
 {
     private readonly Mock<ICredentialRepository> _repoMock;
-    private readonly Mock<IUserClient> _userClientMock;
     private readonly RegisterCredentialCommandHandler _handler;
 
     public RegisterCredentialCommandHandlerTests()
     {
         _repoMock = new Mock<ICredentialRepository>();
-        _userClientMock = new Mock<IUserClient>();
-        _handler = new RegisterCredentialCommandHandler(_repoMock.Object, _userClientMock.Object);
+        _handler = new RegisterCredentialCommandHandler(_repoMock.Object);
     }
 
     [Fact]
     public async Task Handle_Should_CreateCredential_When_ValidInput()
     {
-        var user = TestDataFactory.ValidUser();
         var command = new RegisterCredentialCommand
         {
             Email = "test@example.com",
             Password = "password123"
         };
 
-        _userClientMock.Setup(c => c.GetByEmailAsync(command.Email)).ReturnsAsync(user);
         _repoMock.Setup(r => r.GetByEmailAsync(command.Email)).ReturnsAsync((Credential?)null);
         _repoMock.Setup(r => r.CreateAsync(It.IsAny<Credential>())).ReturnsAsync(new Credential());
 
@@ -42,27 +37,8 @@ public class RegisterCredentialCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_Should_ThrowNotFoundException_When_UserNotFound()
-    {
-        var command = new RegisterCredentialCommand
-        {
-            Email = "unknown@example.com",
-            Password = "password123"
-        };
-
-        _userClientMock.Setup(c => c.GetByEmailAsync(command.Email))
-            .ReturnsAsync((Application.Clients.DTOs.Response.UserClientResponseDto?)null);
-
-        var act = () => _handler.Handle(command, CancellationToken.None);
-
-        await act.Should().ThrowAsync<NotFoundException>()
-            .WithMessage("*not found*");
-    }
-
-    [Fact]
     public async Task Handle_Should_ThrowDuplicateException_When_CredentialAlreadyExists()
     {
-        var user = TestDataFactory.ValidUser();
         var existing = TestDataFactory.ValidCredential();
         var command = new RegisterCredentialCommand
         {
@@ -70,7 +46,6 @@ public class RegisterCredentialCommandHandlerTests
             Password = "password123"
         };
 
-        _userClientMock.Setup(c => c.GetByEmailAsync(command.Email)).ReturnsAsync(user);
         _repoMock.Setup(r => r.GetByEmailAsync(command.Email)).ReturnsAsync(existing);
 
         var act = () => _handler.Handle(command, CancellationToken.None);
@@ -81,14 +56,12 @@ public class RegisterCredentialCommandHandlerTests
     [Fact]
     public async Task Handle_Should_HashPassword_When_Creating()
     {
-        var user = TestDataFactory.ValidUser();
         var command = new RegisterCredentialCommand
         {
             Email = "test@example.com",
             Password = "password123"
         };
 
-        _userClientMock.Setup(c => c.GetByEmailAsync(command.Email)).ReturnsAsync(user);
         _repoMock.Setup(r => r.GetByEmailAsync(command.Email)).ReturnsAsync((Credential?)null);
 
         Credential? capturedCredential = null;
