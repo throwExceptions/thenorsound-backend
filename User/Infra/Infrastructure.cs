@@ -64,6 +64,25 @@ public static class Infrastructure
             });
         }
 
+        services.Configure<AuthClientConfiguration>(
+            configuration.GetSection("AuthClientConfiguration"));
+
+        var authHttpClientBuilder = services.AddHttpClient<IAuthClient, AuthClient>((serviceProvider, client) =>
+        {
+            var config = serviceProvider.GetRequiredService<IOptions<AuthClientConfiguration>>().Value;
+            client.BaseAddress = new Uri(config.BaseUrl);
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+        });
+
+        if (environment.IsDevelopment())
+        {
+            authHttpClientBuilder.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback =
+                    HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+            });
+        }
+
         services.AddScoped<IUserRepository, UserRepository>();
 
         services.Configure<JwtSettings>(

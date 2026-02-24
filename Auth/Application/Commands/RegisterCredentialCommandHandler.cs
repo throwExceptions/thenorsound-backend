@@ -1,4 +1,3 @@
-using Application.Clients;
 using Application.Exceptions;
 using Domain.Models;
 using Domain.Repositories;
@@ -7,17 +6,10 @@ using MediatR;
 namespace Application.Commands;
 
 public class RegisterCredentialCommandHandler(
-    ICredentialRepository credentialRepository,
-    IUserClient userClient) : IRequestHandler<RegisterCredentialCommand>
+    ICredentialRepository credentialRepository) : IRequestHandler<RegisterCredentialCommand>
 {
     public async Task Handle(RegisterCredentialCommand request, CancellationToken cancellationToken)
     {
-        var user = await userClient.GetByEmailAsync(request.Email);
-        if (user == null)
-        {
-            throw new NotFoundException("User not found", "User", request.Email);
-        }
-
         var existing = await credentialRepository.GetByEmailAsync(request.Email);
         if (existing != null)
         {
@@ -28,7 +20,7 @@ public class RegisterCredentialCommandHandler(
 
         await credentialRepository.CreateAsync(new Credential
         {
-            UserId = user.Id,
+            UserId = string.Empty,
             Email = request.Email,
             PasswordHash = passwordHash
         });

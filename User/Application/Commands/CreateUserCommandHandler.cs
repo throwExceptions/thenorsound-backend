@@ -6,7 +6,10 @@ using MediatR;
 
 namespace Application.Commands;
 
-public class CreateUserCommandHandler(IUserRepository userRepository, ICustomerClient customerClient)
+public class CreateUserCommandHandler(
+    IUserRepository userRepository,
+    ICustomerClient customerClient,
+    IAuthClient authClient)
     : IRequestHandler<CreateUserCommand, User>
 {
     public async Task<User> Handle(CreateUserCommand request, CancellationToken cancellationToken)
@@ -26,6 +29,15 @@ public class CreateUserCommandHandler(IUserRepository userRepository, ICustomerC
             }
         }
 
-        return await userRepository.CreateAsync(request.Adapt<User>());
+        var createdUser = await userRepository.CreateAsync(request.Adapt<User>());
+
+        var credentialRegistered = await authClient.RegisterCredentialAsync(request.Email, request.Password);
+        if (!credentialRegistered)
+        {
+            await userRepository.DeleteAsync(createdUser.Id);
+            throw new BadRequestException("Failed to register credentials. User creation rolled back.");
+        }
+
+        return createdUser;
     }
 }

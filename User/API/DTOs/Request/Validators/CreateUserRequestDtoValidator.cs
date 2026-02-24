@@ -11,6 +11,10 @@ public class CreateUserRequestDtoValidator : AbstractValidator<CreateUserRequest
             .NotEmpty().WithMessage("Email is required.")
             .EmailAddress().WithMessage("Email must be a valid email address.");
 
+        RuleFor(x => x.Password)
+            .NotEmpty().WithMessage("Password is required.")
+            .MinimumLength(8).WithMessage("Password must be at least 8 characters.");
+
         RuleFor(x => x.FirstName)
             .NotEmpty().WithMessage("FirstName is required.")
             .MaximumLength(200).WithMessage("FirstName cannot exceed 200 characters.");
