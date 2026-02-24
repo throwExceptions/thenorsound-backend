@@ -14,13 +14,17 @@ public class UpdateUserCommandHandlerTests
 {
     private readonly Mock<IUserRepository> _repoMock;
     private readonly Mock<ICustomerClient> _customerClientMock;
+    private readonly Mock<IAuthClient> _authClientMock;
     private readonly UpdateUserCommandHandler _handler;
 
     public UpdateUserCommandHandlerTests()
     {
         _repoMock = new Mock<IUserRepository>();
         _customerClientMock = new Mock<ICustomerClient>();
-        _handler = new UpdateUserCommandHandler(_repoMock.Object, _customerClientMock.Object);
+        _authClientMock = new Mock<IAuthClient>();
+        _authClientMock.Setup(a => a.UpdateEmailAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(true);
+        _handler = new UpdateUserCommandHandler(_repoMock.Object, _customerClientMock.Object, _authClientMock.Object);
     }
 
     [Fact]

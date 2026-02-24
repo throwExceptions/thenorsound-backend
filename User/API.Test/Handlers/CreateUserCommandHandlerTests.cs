@@ -15,13 +15,17 @@ public class CreateUserCommandHandlerTests
 {
     private readonly Mock<IUserRepository> _repoMock;
     private readonly Mock<ICustomerClient> _customerClientMock;
+    private readonly Mock<IAuthClient> _authClientMock;
     private readonly CreateUserCommandHandler _handler;
 
     public CreateUserCommandHandlerTests()
     {
         _repoMock = new Mock<IUserRepository>();
         _customerClientMock = new Mock<ICustomerClient>();
-        _handler = new CreateUserCommandHandler(_repoMock.Object, _customerClientMock.Object);
+        _authClientMock = new Mock<IAuthClient>();
+        _authClientMock.Setup(a => a.RegisterCredentialAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(true);
+        _handler = new CreateUserCommandHandler(_repoMock.Object, _customerClientMock.Object, _authClientMock.Object);
     }
 
     [Fact]

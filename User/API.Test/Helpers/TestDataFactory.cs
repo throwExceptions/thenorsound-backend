@@ -68,6 +68,7 @@ public static class TestDataFactory
             Email = "test@example.com",
             FirstName = "Test",
             LastName = "Testsson",
+            Password = "ValidPassword1!",
             Role = 3,
             CustomerId = ValidMongoId2,
             Phone = "+46701234567",
