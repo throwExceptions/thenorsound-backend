@@ -24,6 +24,8 @@ public class UpdateUserCommandHandlerTests
         _authClientMock = new Mock<IAuthClient>();
         _authClientMock.Setup(a => a.UpdateEmailAsync(It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(true);
+        _authClientMock.Setup(a => a.UpdatePasswordAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(true);
         _handler = new UpdateUserCommandHandler(_repoMock.Object, _customerClientMock.Object, _authClientMock.Object);
     }
 
@@ -275,6 +277,69 @@ public class UpdateUserCommandHandlerTests
 
         await act.Should().ThrowAsync<NotFoundException>()
             .WithMessage("*not found*");
+    }
+
+    [Fact]
+    public async Task Handle_Should_CallUpdatePasswordAsync_When_PasswordProvided()
+    {
+        var existing = TestDataFactory.ValidUser();
+
+        _repoMock.Setup(r => r.GetByIdAsync(TestDataFactory.ValidMongoId))
+            .ReturnsAsync(existing);
+        _repoMock.Setup(r => r.UpdateAsync(TestDataFactory.ValidMongoId, It.IsAny<User>()))
+            .ReturnsAsync(true);
+
+        var command = new UpdateUserCommand
+        {
+            Id = TestDataFactory.ValidMongoId,
+            Password = "NewPassword1!",
+        };
+
+        await _handler.Handle(command, CancellationToken.None);
+
+        _authClientMock.Verify(a => a.UpdatePasswordAsync(existing.Email, "NewPassword1!"), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_Should_NotCallUpdatePasswordAsync_When_PasswordIsNull()
+    {
+        var existing = TestDataFactory.ValidUser();
+
+        _repoMock.Setup(r => r.GetByIdAsync(TestDataFactory.ValidMongoId))
+            .ReturnsAsync(existing);
+        _repoMock.Setup(r => r.UpdateAsync(TestDataFactory.ValidMongoId, It.IsAny<User>()))
+            .ReturnsAsync(true);
+
+        var command = new UpdateUserCommand
+        {
+            Id = TestDataFactory.ValidMongoId,
+            Password = null,
+        };
+
+        await _handler.Handle(command, CancellationToken.None);
+
+        _authClientMock.Verify(a => a.UpdatePasswordAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_Should_NotCallUpdatePasswordAsync_When_PasswordIsEmpty()
+    {
+        var existing = TestDataFactory.ValidUser();
+
+        _repoMock.Setup(r => r.GetByIdAsync(TestDataFactory.ValidMongoId))
+            .ReturnsAsync(existing);
+        _repoMock.Setup(r => r.UpdateAsync(TestDataFactory.ValidMongoId, It.IsAny<User>()))
+            .ReturnsAsync(true);
+
+        var command = new UpdateUserCommand
+        {
+            Id = TestDataFactory.ValidMongoId,
+            Password = "",
+        };
+
+        await _handler.Handle(command, CancellationToken.None);
+
+        _authClientMock.Verify(a => a.UpdatePasswordAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
     }
 
     [Fact]

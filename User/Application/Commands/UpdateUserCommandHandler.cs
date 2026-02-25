@@ -114,6 +114,11 @@ public class UpdateUserCommandHandler(IUserRepository userRepository, ICustomerC
             await authClient.UpdateEmailAsync(oldEmail, user.Email);
         }
 
+        if (result && !string.IsNullOrWhiteSpace(request.Password))
+        {
+            await authClient.UpdatePasswordAsync(user.Email, request.Password);
+        }
+
         return result;
     }
 }
