@@ -18,20 +18,32 @@ som anropas utan JWT — Auth → User respektive User → Customer.
 
 ---
 
-## 1. Registrera lösenord
+## 1. Skapa användare + registrera credentials
 
-Görs en gång per användare. Kräver att användaren redan finns i User service.
+Görs i ett anrop från frontend. User service ansvarar för att registrera credentials i Auth service.
 
 ```
-POST /api/Auth/credentials
-{ "email": "anna@example.com", "password": "hemligt123" }
+POST /api/User
+{ "email": "anna@example.com", "firstName": "Anna", "lastName": "Svensson",
+  "password": "hemligt123", "role": 2, "customerId": "abc123", "phone": "..." }
 ```
+
+**User service:**
+1. Validerar request (FluentValidation)
+2. Kontrollerar att email inte är tagen
+3. Skapar User-dokument i MongoDB
+4. `POST /api/Auth/credentials` — anropar Auth service internt med `{ userId, email, password }`
 
 **Auth service:**
-1. `GET /api/User/by-email/anna@example.com` — verifierar att användaren finns
-2. Kontrollerar att credentials inte redan finns i MongoDB
-3. `BCrypt.HashPassword("hemligt123", workFactor: 12)` → `"$2a$12$xyz..."`
-4. Sparar `{ userId, email, passwordHash }` i `credentials`-collection
+5. `BCrypt.HashPassword("hemligt123", workFactor: 12)` → `"$2a$12$xyz..."`
+6. Sparar `{ userId, email, passwordHash }` i `credentials`-collection
+
+**Rollback:**
+Om steg 4–6 misslyckas → User service kör `DELETE /api/User/{id}` och kastar exception.
+Användaren skapas alltid atomärt — aldrig utan credentials, aldrig credentials utan user.
+
+> **Intern endpoint (Admin/Superuser kan fortfarande anropa direkt):**
+> `POST /api/Auth/credentials  { email, password }` — Auth anropar User service för att verifiera att user finns
 
 ---
 
@@ -83,6 +95,7 @@ Authorization: Bearer eyJ...
 | `lastname` | Svensson |
 | `role` | 2 |
 | `customerId` | abc123 |
+| `customerType` | 1 (Customer) eller 2 (Crew) |
 | `exp` | Unix-timestamp (UtcNow + 15 min) |
 
 ---
@@ -186,6 +199,91 @@ JwtSettings__Audience=ThenorSound
 
 ---
 
+## 6. Email-uppdatering (sync User → Auth)
+
+När en användares email ändras i User service synkas den automatiskt till Auth service.
+
+```
+Frontend
+  │  PUT /api/User/{id}  { email: "ny@exempel.se", ... }
+  ▼
+User service
+  │  1. Kontrollerar att ny email inte är tagen (GetByEmailAsync)
+  │  2. Sparar oldEmail = user.Email
+  │  3. Uppdaterar user.email i MongoDB
+  │  4. PUT /api/Auth/credentials/email  { oldEmail, newEmail }
+  ▼
+Auth service
+  │  5. Hittar credential via oldEmail
+  │  6. Kontrollerar att newEmail inte är tagen i credentials
+  │  7. Uppdaterar credentials.email i MongoDB
+```
+
+---
+
+## 7. Lazy migration — CustomerType
+
+Användare skapade innan `CustomerType`-fältet lades till har `customerType: 0` i MongoDB.
+
+Migreras automatiskt vid inloggning i `GetUserByEmailQueryHandler`:
+
+```
+1. Hämtar user via email
+2. Om user.CustomerType == 0 OCH user.CustomerId är satt:
+   a. GET /api/Customer/{id} → hämtar kund från Customer service
+   b. user.CustomerType = customer.CustomerType
+   c. Sparar uppdaterad user i MongoDB
+3. Returnerar user (nu med korrekt customerType)
+```
+
+Användaren får korrekt `customerType` i JWT vid **nästa inloggning**.
+
+---
+
+## 8. Roller och behörigheter
+
+### Roller (Role enum — User service + JWT)
+
+| Roll      | Värde | Beskrivning                                            |
+|-----------|-------|--------------------------------------------------------|
+| Superuser | 1     | Fullständig åtkomst, hanteras via `/superusers`-sidan  |
+| Admin     | 2     | Hanterar sin kunds användare och data                  |
+| User      | 3     | Vanlig användare — **behörigheter ej spec:ade ännu**   |
+
+### CustomerType (CustomerType enum — Customer + User service + JWT)
+
+| Typ      | Värde | Beskrivning       |
+|----------|-------|-------------------|
+| Customer | 1     | Arrangör/bolag     |
+| Crew     | 2     | Crewbolag          |
+
+### Backend — User service behörigheter
+
+| Åtgärd              | Superuser (1) | Admin (2)     | User (3)          |
+|---------------------|---------------|---------------|-------------------|
+| Skapa användare     | Alla kunder   | Egen kund     | ❌ Ej spec:at     |
+| Uppdatera användare | Alla          | Egen kund     | ❌ Ej spec:at     |
+| Ta bort användare   | Alla          | Egen kund     | ❌ Ej spec:at     |
+| Byta CustomerId     | ✅ Ja         | ❌ Nej        | ❌ Nej            |
+| Rensa CustomerId    | ✅ Ja (`""`)  | ❌ Nej        | ❌ Nej            |
+
+### Frontend — UI-behörigheter (SideMenu + ManageCustomer)
+
+| Variabel              | Villkor                      | Effekt                                      |
+|-----------------------|------------------------------|---------------------------------------------|
+| `canAccessAdmin`      | role === 1 eller role === 2  | Visar "Administratör" i sidomenyn           |
+| `canAccessCrew`       | customerType === 2           | Visar "Crew"-sektionen i sidomenyn          |
+| `canAccessOrganizer`  | customerType === 1           | Visar "Arrangör"-sektionen i sidomenyn      |
+| `canAddUser`          | role === 1 eller role === 2  | Visar "Ny användare"-knapp + formulär       |
+| `canEditUser(u)`      | role 1/2, eller u.email === loggedInUser.email | Visar Redigera-knapp      |
+| `canDeleteUser(u)`    | role === 1 eller role === 2  | Visar Ta bort-knapp                         |
+
+> Superusers länkade till en kund är **read-only** i ManageCustomers (visas men kan inte redigeras/tas bort).
+>
+> **TODO:** Rollbehörigheter för Role=3 (User) är inte spec:ade ännu.
+
+---
+
 ## Öppna endpoints (kräver ingen JWT)
 
 | Tjänst | Endpoint | Anledning |
@@ -193,6 +291,7 @@ JwtSettings__Audience=ThenorSound
 | Auth | `POST /api/Auth/login` | Är inloggnings-endpoint |
 | Auth | `POST /api/Auth/refresh` | Använder refresh token-cookie istället |
 | Auth | `POST /api/Auth/logout` | Måste kunna nås utan giltigt access token |
-| Auth | `POST /api/Auth/credentials` | Registrering, anropas av admin innan login |
+| Auth | `POST /api/Auth/credentials` | Anropas av User service vid skapande av användare |
+| Auth | `PUT /api/Auth/credentials/email` | Anropas av User service vid email-ändring |
 | User | `GET /api/User/by-email/{email}` | Anropas av Auth service (service-to-service) |
-| Customer | `GET /api/Customer/{id}` | Anropas av User service (service-to-service) |
+| Customer | `GET /api/Customer/{id}` | Anropas av User service (service-to-service, inkl. lazy migration) |

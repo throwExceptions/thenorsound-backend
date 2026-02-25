@@ -22,13 +22,16 @@ Service/
 
 ### Customer Service (`Customer/`)
 - CRUD for customers (companies and crews)
-- `CustomerType` enum: Customer=1, Crew=2, Admin=3
+- `CustomerType` enum: Customer=1, Crew=2
 - Ports: dotnet run HTTP 5063 / HTTPS 7030, Docker 6063
 
 ### User Service (`User/`)
 - CRUD for users belonging to customers
 - `Role` enum: Superuser=1, Admin=2, User=3
+- On **create**: calls Auth service to register credentials (rollback = delete user if Auth fails)
+- On **email update**: calls Auth service to sync credentials.email (`PUT /api/Auth/credentials/email`)
 - Calls Customer service to validate CustomerType matches UserType on create/update
+- `GetUserByEmailQueryHandler`: lazy migration — if `customerType == 0` and `customerId` is set, looks up customer and updates `customerType` in MongoDB
 - **Superuser (Role=1)** skips CustomerType validation, CustomerId optional
 - Admin and User require CustomerId on create
 - Ports: dotnet run HTTP 50572 / HTTPS 50571, Docker 6062
@@ -36,11 +39,14 @@ Service/
 ### Auth Service (`Auth/`)
 - Issues and validates JWT access tokens (15 min, response body) and refresh tokens (7 days, HTTP-only cookie)
 - Own MongoDB collection: `credentials` — stores userId, email, passwordHash, refreshToken, refreshTokenExpiry
-- Calls User service (`GET /api/User/by-email/{email}`) to enrich JWT claims
+- Calls User service (`GET /api/User/by-email/{email}`) to enrich JWT claims (incl. customerType)
+- `PUT /api/Auth/credentials/email` — updates credentials.email when user changes email
 - Refresh token cookie path restricted to `/api/Auth/refresh` (token rotation on every refresh)
 - BCrypt (workFactor=12) for password hashing
 - Ports: dotnet run HTTP 5264 / HTTPS 7264, Docker 6061
 - User secrets required locally: `JwtSettings:SecretKey` (min 32 chars), `MongoDbSettings:ConnectionString`
+
+**See `AUTH_FLOW.md` for full authentication and credential registration flow.**
 
 #### CustomerId update rules (`UpdateUserCommandHandler`)
 - `request.CustomerId == null` → field not sent, no change (all roles)
@@ -51,13 +57,23 @@ Service/
 #### UserRepository.UpdateAsync
 All fields are explicitly copied to `existingEntity` before `ReplaceOneAsync`.
 `CustomerId` is included: `existingEntity.CustomerId = user.CustomerId ?? string.Empty`
+`CustomerType` is included: `existingEntity.CustomerType = user.CustomerType`
 
-### Service-to-Service Communication (User → Customer)
+### Service-to-Service Communication
+
+**User → Customer**
 - Interface: `Application/Clients/ICustomerClient.cs`
 - Implementation: `Infra/Clients/CustomerClient.cs` (typed HttpClient)
 - Config: `Infra/Settings/CustomerClientConfiguration.cs`
 - SSL bypass only in Development: `IHostEnvironment.IsDevelopment()` check in `Infrastructure.cs`
 - Config override for Docker: `CustomerClientConfiguration__BaseUrl=http://customer-service:8080`
+
+**User → Auth**
+- Interface: `Application/Clients/IAuthClient.cs`
+- Implementation: `Infra/Clients/AuthClient.cs` (typed HttpClient)
+- Config: `Infra/Settings/AuthClientConfiguration.cs`
+- Methods: `RegisterCredentialAsync(userId, email, password)`, `UpdateEmailAsync(oldEmail, newEmail)`
+- Azure env var: `AuthClientConfiguration__BaseUrl` on `thenorsound-user-api`
 
 ## Configuration Hierarchy
 1. `appsettings.json` (defaults, points to localhost HTTPS for dotnet run)
@@ -69,9 +85,14 @@ All fields are explicitly copied to `existingEntity` before `ReplaceOneAsync`.
 "CustomerClientConfiguration": {
     "BaseUrl": "https://localhost:7030",
     "GetByIdEndpoint": "api/Customer/{0}"
-}
+},
+"AuthClientConfiguration": {
+    "BaseUrl": "https://localhost:7264",
+    "RegisterCredentialEndpoint": "api/Auth/credentials",
+    "UpdateCredentialEmailEndpoint": "api/Auth/credentials/email"
+},
 "MongoDbSettings": {
-    "ConnectionString": "mongodb+srv://...",  // Azure Cosmos DB for dotnet run
+    "ConnectionString": "mongodb+srv://...",
     "DatabaseName": "thenorsound",
     "UserCollectionName": "users"
 }
