@@ -36,6 +36,14 @@ Service/
 - Admin and User require CustomerId on create
 - Ports: dotnet run HTTP 50572 / HTTPS 50571, Docker 6062
 
+### Event Service (`Event/`)
+- CRUD for events belonging to organizer customers (CustomerType=1)
+- `SkillCategory` enum: Ljudtekniker=1, Ljustekniker=2, Scen=3, Bild=4, Teknik=5
+- `SkillLevel` enum: A=1, B=2, C=3
+- Soft delete (isActive=false)
+- Ports: dotnet run HTTP 5065 / HTTPS 7065, Docker 6064
+- User Secrets required locally: `JwtSettings:SecretKey`, `MongoDbSettings:ConnectionString`
+
 ### Auth Service (`Auth/`)
 - Issues and validates JWT access tokens (15 min, response body) and refresh tokens (7 days, HTTP-only cookie)
 - Own MongoDB collection: `credentials` — stores userId, email, passwordHash, refreshToken, refreshTokenExpiry

@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+  </Folder>
+  <Folder Name="/Test/">
+    <Project Path="API.Test/API.Test.csproj" Id="fb6195e3-e1d8-435a-8c47-5ccc11fa9df9" />
+    <Project Path="Infra.Test/Infra.Test.csproj" Id="db695f84-31c4-4a46-b1be-7d280c4f9d0c" />
+  </Folder>
+  <Project Path="API/API.csproj" />
+  <Project Path="Application/Application.csproj" />
+  <Project Path="Domain/Domain.csproj" />
+  <Project Path="Infra/Infra.csproj" />
+</Solution>
