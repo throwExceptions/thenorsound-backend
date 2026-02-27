@@ -19,7 +19,7 @@ public class CreateEventCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_Should_ReturnCreatedEvent_When_ValidCommand()
+    public async Task Handle_Should_ReturnCreatedEvent_When_CommandIsValid()
     {
         var command = new CreateEventCommand
         {
