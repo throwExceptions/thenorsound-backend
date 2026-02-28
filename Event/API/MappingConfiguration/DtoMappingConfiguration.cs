@@ -31,6 +31,7 @@ public static class DtoMappingConfiguration
         TypeAdapterConfig<IFormFile, UploadFileItem>.NewConfig()
             .Map(dest => dest.FileName, src => src.FileName)
             .Map(dest => dest.ContentType, src => src.ContentType)
-            .Map(dest => dest.Content, src => src.OpenReadStream());
+            .Map(dest => dest.Content, src => src.OpenReadStream())
+            .Map(dest => dest.Length, src => src.Length);
     }
 }
