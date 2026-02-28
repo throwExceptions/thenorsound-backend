@@ -1,6 +1,8 @@
+using Application.Services;
 using Domain.Entities;
 using Domain.Repositories;
 using Infra.Repositories;
+using Infra.Services;
 using Infra.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
@@ -42,6 +44,9 @@ public static class Infrastructure
         });
 
         services.AddScoped<IEventRepository, EventRepository>();
+
+        services.Configure<BlobStorageSettings>(configuration.GetSection("BlobStorageSettings"));
+        services.AddScoped<IBlobStorageService, BlobStorageService>();
 
         services.Configure<JwtSettings>(
             configuration.GetSection("JwtSettings"));

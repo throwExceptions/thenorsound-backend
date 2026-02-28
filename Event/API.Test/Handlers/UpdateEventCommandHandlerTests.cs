@@ -19,7 +19,7 @@ public class UpdateEventCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_Should_ReturnTrue_When_EventUpdated()
+    public async Task Handle_Should_ReturnEvent_When_EventUpdated()
     {
         var ev = TestDataFactory.ValidEvent();
         _repoMock.Setup(r => r.GetByIdAsync(TestDataFactory.ValidMongoId))
@@ -35,7 +35,9 @@ public class UpdateEventCommandHandlerTests
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
-        result.Should().BeTrue();
+        result.Should().NotBeNull();
+        result.Id.Should().Be(TestDataFactory.ValidMongoId);
+        result.Project.Should().Be("Updated Event");
         _repoMock.Verify(r => r.UpdateAsync(TestDataFactory.ValidMongoId, It.IsAny<Event>()), Times.Once);
     }
 

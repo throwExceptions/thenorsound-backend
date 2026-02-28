@@ -108,7 +108,7 @@ public class EventController(
     }
 
     [HttpPut("{id}")]
-    [ProducesResponseType(typeof(BaseResponseDto<bool>), 200)]
+    [ProducesResponseType(typeof(BaseResponseDto<EventResponseDto>), 200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> UpdateEvent([FromRoute] string id, [FromBody] UpdateEventRequestDto request)
     {
@@ -122,9 +122,34 @@ public class EventController(
                 var command = request.Adapt<UpdateEventCommand>();
                 var result = await mediator.Send(command);
 
-                return this.Ok(new BaseResponseDto<bool>
+                return this.Ok(new BaseResponseDto<EventResponseDto>
                 {
-                    Result = result
+                    Result = result.Adapt<EventResponseDto>()
+                });
+            }, logger);
+    }
+
+    [HttpPost("{id}/files")]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(BaseResponseDto<IEnumerable<EventFileResponseDto>>), 200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> UploadEventFiles(
+        [FromRoute] string id,
+        IFormFileCollection files)
+    {
+        var command = new UploadEventFilesCommand
+        {
+            EventId = id,
+            Files = files.Adapt<List<UploadFileItem>>(),
+        };
+
+        return await this.TryExecuteAsync(
+            async () =>
+            {
+                var result = await mediator.Send(command);
+                return this.Ok(new BaseResponseDto<IEnumerable<EventFileResponseDto>>
+                {
+                    Result = result.Adapt<List<EventFileResponseDto>>()
                 });
             }, logger);
     }

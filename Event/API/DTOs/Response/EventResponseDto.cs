@@ -11,6 +11,7 @@ public class EventResponseDto
     public string? BookingResponsible { get; set; }
     public decimal TotalTechnicalCost { get; set; }
     public List<SlotResponseDto> Slots { get; set; } = new();
+    public List<EventFileResponseDto> Files { get; set; } = new();
     public bool IsActive { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

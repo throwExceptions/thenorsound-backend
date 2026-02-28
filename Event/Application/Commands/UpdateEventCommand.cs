@@ -2,7 +2,7 @@ using MediatR;
 
 namespace Application.Commands;
 
-public class UpdateEventCommand : IRequest<bool>
+public class UpdateEventCommand : IRequest<Event>
 {
     public string Id { get; set; } = string.Empty;
     public string? Project { get; set; }

@@ -1,7 +1,9 @@
 using API.DTOs.Request;
 using API.DTOs.Response;
+using Application.Commands;
 using Domain.Enums;
 using Mapster;
+using Microsoft.AspNetCore.Http;
 
 namespace API.MappingConfiguration;
 
@@ -25,5 +27,10 @@ public static class DtoMappingConfiguration
 
         TypeAdapterConfig<UpdateEventRequestDto, Application.Commands.UpdateEventCommand>.NewConfig()
             .Map(dest => dest.Slots, src => src.Slots == null ? null : src.Slots.Adapt<List<Slot>>());
+
+        TypeAdapterConfig<IFormFile, UploadFileItem>.NewConfig()
+            .Map(dest => dest.FileName, src => src.FileName)
+            .Map(dest => dest.ContentType, src => src.ContentType)
+            .Map(dest => dest.Content, src => src.OpenReadStream());
     }
 }

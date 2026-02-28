@@ -5,9 +5,9 @@ using MediatR;
 namespace Application.Commands;
 
 public class UpdateEventCommandHandler(IEventRepository eventRepository)
-    : IRequestHandler<UpdateEventCommand, bool>
+    : IRequestHandler<UpdateEventCommand, Event>
 {
-    public async Task<bool> Handle(UpdateEventCommand request, CancellationToken cancellationToken)
+    public async Task<Event> Handle(UpdateEventCommand request, CancellationToken cancellationToken)
     {
         var ev = await eventRepository.GetByIdAsync(request.Id);
         if (ev == null)
@@ -52,6 +52,12 @@ public class UpdateEventCommandHandler(IEventRepository eventRepository)
 
         ev.UpdatedAt = DateTime.UtcNow;
 
-        return await eventRepository.UpdateAsync(request.Id, ev);
+        var success = await eventRepository.UpdateAsync(request.Id, ev);
+        if (!success)
+        {
+            throw new NotFoundException($"Event with ID '{request.Id}' could not be updated.");
+        }
+
+        return ev;
     }
 }

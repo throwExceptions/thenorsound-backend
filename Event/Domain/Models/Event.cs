@@ -9,6 +9,7 @@ public class Event
     public string? BookingResponsible { get; set; }
     public decimal TotalTechnicalCost { get; set; }
     public List<Slot> Slots { get; set; } = new();
+    public List<EventFile> Files { get; set; } = new();
     public bool IsActive { get; set; } = true;
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

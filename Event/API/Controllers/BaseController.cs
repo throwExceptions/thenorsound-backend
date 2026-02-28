@@ -82,6 +82,42 @@ namespace API.Controllers
             }
         }
 
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> TryExecuteAsync<TResult>(
+                Func<Task<TResult>> function,
+                ILogger<T> logger)
+                where TResult : IActionResult
+        {
+            try
+            {
+                return await function();
+            }
+            catch (NotFoundException ex)
+            {
+                logger.LogInformation(
+                    "Not found exception in {name}. Entity: {entityName}, ID: {entityId}",
+                    typeof(T).Name,
+                    ex.EntityName,
+                    ex.EntityId);
+                return NotFoundResponse(ex);
+            }
+            catch (HttpRequestException ex)
+            {
+                logger.LogError("Exception in " + typeof(T).Name + ".", ex);
+                return ErrorResponse(ex, ErrorType.HttpClientError, HttpStatusCode.InternalServerError, new List<KeyValuePair<string, object>>());
+            }
+            catch (BadRequestException ex)
+            {
+                logger.LogInformation("Bad request exception in {name}. {ex}", typeof(T).Name, ex.ToString());
+                return ErrorResponse(ex, ErrorType.ArgumentError, HttpStatusCode.BadRequest, ex.FormValidationError);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("Exception in " + typeof(T).Name + ".", ex);
+                return ErrorResponse(ex, ErrorType.UnknownError, HttpStatusCode.InternalServerError, new List<KeyValuePair<string, object>>());
+            }
+        }
+
         private IActionResult ErrorResponse(Exception ex, ErrorType errorType, HttpStatusCode statusCode, IList<KeyValuePair<string, object>> formValidationError)
         {
             return StatusCode((int)statusCode, new BaseResponseDto<Error>

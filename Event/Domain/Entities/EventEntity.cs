@@ -30,6 +30,9 @@ public class EventEntity : BaseEntity
     [BsonElement("slots")]
     public List<SlotEntity> Slots { get; set; } = new();
 
+    [BsonElement("files")]
+    public List<EventFileEntity> Files { get; set; } = new();
+
     [BsonElement("isActive")]
     public bool IsActive { get; set; } = true;
 }
