@@ -28,6 +28,13 @@ public static class TestDataFactory
         };
     }
 
+    public static Event ValidEventWithFile(string fileUrl)
+    {
+        var ev = ValidEvent();
+        ev.Files = [new EventFile { Name = "report.pdf", Url = fileUrl }];
+        return ev;
+    }
+
     public static Slot ValidSlot()
     {
         return new Slot

@@ -22,4 +22,11 @@ public class BlobStorageService(IOptions<BlobStorageSettings> settings) : IBlobS
 
         return blobClient.Uri.ToString();
     }
+
+    public async Task DeleteAsync(string fileUrl)
+    {
+        var containerClient = new BlobContainerClient(_settings.ConnectionString, _settings.ContainerName);
+        var blobName = new Uri(fileUrl).AbsolutePath.TrimStart('/')[(_settings.ContainerName.Length + 1)..];
+        await containerClient.GetBlobClient(blobName).DeleteIfExistsAsync();
+    }
 }

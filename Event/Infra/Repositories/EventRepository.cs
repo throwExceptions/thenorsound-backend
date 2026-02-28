@@ -89,4 +89,11 @@ public class EventRepository(IMongoCollection<EventEntity> events) : IEventRepos
         var update = Builders<EventEntity>.Update.PushEach(e => e.Files, entities);
         await events.UpdateOneAsync(e => e.Id == id, update);
     }
+
+    public async Task<bool> RemoveFileAsync(string id, string fileUrl)
+    {
+        var update = Builders<EventEntity>.Update.PullFilter(e => e.Files, f => f.Url == fileUrl);
+        var result = await events.UpdateOneAsync(e => e.Id == id && e.IsActive, update);
+        return result.ModifiedCount > 0;
+    }
 }

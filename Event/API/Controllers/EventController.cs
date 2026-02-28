@@ -155,6 +155,27 @@ public class EventController(
             }, logger);
     }
 
+    [HttpDelete("{id}/files")]
+    [ProducesResponseType(typeof(BaseResponseDto<bool>), 200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> RemoveEventFile(
+        [FromRoute] string id,
+        [FromQuery] string fileUrl)
+    {
+        var request = new GetEventByIdRequestDto { Id = id };
+
+        return await this.TryExecuteAsync(
+            request,
+            getByIdValidator,
+            async () =>
+            {
+                var command = new RemoveEventFileCommand { EventId = id, FileUrl = fileUrl };
+                var result = await mediator.Send(command);
+
+                return this.Ok(new BaseResponseDto<bool> { Result = result });
+            }, logger);
+    }
+
     [HttpDelete("{id}")]
     [ProducesResponseType(typeof(BaseResponseDto<bool>), 200)]
     [ProducesResponseType(404)]

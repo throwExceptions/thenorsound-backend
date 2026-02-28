@@ -29,9 +29,12 @@ public static class DtoMappingConfiguration
             .Map(dest => dest.Slots, src => src.Slots == null ? null : src.Slots.Adapt<List<Slot>>());
 
         TypeAdapterConfig<IFormFile, UploadFileItem>.NewConfig()
-            .Map(dest => dest.FileName, src => src.FileName)
-            .Map(dest => dest.ContentType, src => src.ContentType)
-            .Map(dest => dest.Content, src => src.OpenReadStream())
-            .Map(dest => dest.Length, src => src.Length);
+            .MapWith(src => new UploadFileItem
+            {
+                FileName = src.FileName,
+                ContentType = src.ContentType,
+                Content = src.OpenReadStream(),
+                Length = src.Length,
+            });
     }
 }
