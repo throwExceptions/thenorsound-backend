@@ -131,6 +131,7 @@ public class EventController(
 
     [HttpPost("{id}/files")]
     [Consumes("multipart/form-data")]
+    [RequestSizeLimit(32 * 1024 * 1024)]
     [ProducesResponseType(typeof(BaseResponseDto<IEnumerable<EventFileResponseDto>>), 200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> UploadEventFiles(
